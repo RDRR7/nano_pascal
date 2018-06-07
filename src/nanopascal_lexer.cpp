@@ -16,25 +16,153 @@
 static const char *kw[] = {
     "program",
     "var",
+    "array",
+    "of",
+    "integer",
+    "boolean",
+    "char",
+    "not",
+    "and",
+    "or",
+    "xor",
+    "shl",
+    "shr",
+    "div",
+    "mod",
     "begin",
     "end",
+    "break",
     "if",
     "then",
     "else",
+    "while",
+    "repeat",
+    "until",
+    "for",
+    "do",
+    "write",
     "writeln",
+    "to",
     0,
 };
 
 static Symbol kwTk[] = {
     Symbol::KwProgram,
     Symbol::KwVar,
+    Symbol::KwArray,
+    Symbol::KwOf,
+    Symbol::KwInteger,
+    Symbol::KwBoolean,
+    Symbol::KwChar,
+    Symbol::KwNot,
+    Symbol::KwAnd,
+    Symbol::KwOr,
+    Symbol::KwXor,
+    Symbol::KwShl,
+    Symbol::KwShr,
+    Symbol::KwDiv,
+    Symbol::KwMod,
     Symbol::KwBegin,
     Symbol::KwEnd,
+    Symbol::KwBreak,
     Symbol::KwIf,
     Symbol::KwThen,
     Symbol::KwElse,
+    Symbol::KwWhile,
+    Symbol::KwRepeat,
+    Symbol::KwUntil,
+    Symbol::KwFor,
+    Symbol::KwDo,
+    Symbol::KwWrite,
     Symbol::KwWriteln,
+    Symbol::KwTo,
 };
+
+const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
+{
+
+    switch (Symbol)
+    {
+    case Symbol::Number:
+        return "Number";
+    case Symbol::Ident:
+        return "Identifier";
+    case Symbol::OpAdd:
+        return "Add";
+    case Symbol::OpSub:
+        return "Sub";
+    case Symbol::OpMul:
+        return "Mul";
+    case Symbol::OpenPar:
+        return "Open Par";
+    case Symbol::ClosePar:
+        return "Close Par";
+    case Symbol::Semicolon:
+        return "Semicolon";
+    case Symbol::Eof:
+        return "End of Input";
+    case Symbol::KwProgram:
+        return "Program";
+    case Symbol::KwVar:
+        return "Var";
+    case Symbol::KwArray:
+        return "Array";
+    case Symbol::KwOf:
+        return "Of";
+    case Symbol::KwInteger:
+        return "Integer";
+    case Symbol::KwBoolean:
+        return "Boolean";
+    case Symbol::KwChar:
+        return "Char";
+    case Symbol::KwNot:
+        return "Not";
+    case Symbol::KwAnd:
+        return "And";
+    case Symbol::KwOr:
+        return "Or";
+    case Symbol::KwXor:
+        return "Xor";
+    case Symbol::KwShl:
+        return "Shl";
+    case Symbol::KwShr:
+        return "Shr";
+    case Symbol::KwDiv:
+        return "Div";
+    case Symbol::KwMod:
+        return "Mod";
+    case Symbol::KwBegin:
+        return "Begin";
+    case Symbol::KwEnd:
+        return "End";
+    case Symbol::KwBreak:
+        return "Break";
+    case Symbol::KwIf:
+        return "If";
+    case Symbol::KwThen:
+        return "Then";
+    case Symbol::KwElse:
+        return "Else";
+    case Symbol::KwWhile:
+        return "While";
+    case Symbol::KwRepeat:
+        return "Repeat";
+    case Symbol::KwUntil:
+        return "Until";
+    case Symbol::KwFor:
+        return "For";
+    case Symbol::KwDo:
+        return "Do";
+    case Symbol::KwWrite:
+        return "Write";
+    case Symbol::KwWriteln:
+        return "Writeln";
+    case Symbol::KwTo:
+        return "To";
+    }
+
+    return "Unknown";
+}
 
 void NanoPascalLexer::append_sequence(std::function<bool(char)> func)
 {

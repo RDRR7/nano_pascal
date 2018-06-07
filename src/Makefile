@@ -11,7 +11,7 @@ $(TARGET): $(OBJ_FILES)
 	g++ -std=c++11 -g -c -o $@ $<
 
 run: $(TARGET)
-	./$(TARGET) ../examples/HelloWorld.pas
+	./$(TARGET) ../examples/KeywordsTest.txt
 
 clean:
 	rm -f *.o

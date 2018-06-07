@@ -2,34 +2,6 @@
 #include <fstream>
 #include "nanopascal_lexer.h"
 
-const char *get_symbol_name(Symbol Symbol)
-{
-
-    switch (Symbol)
-    {
-    case Symbol::Number:
-        return "Number";
-    case Symbol::Ident:
-        return "Identifier";
-    case Symbol::OpAdd:
-        return "Add";
-    case Symbol::OpSub:
-        return "Sub";
-    case Symbol::OpMul:
-        return "Mul";
-    case Symbol::OpenPar:
-        return "Open Par";
-    case Symbol::ClosePar:
-        return "Close Par";
-    case Symbol::Semicolon:
-        return "Semicolon";
-    case Symbol::Eof:
-        return "End of Input";
-    }
-
-    return "Unknown";
-}
-
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -52,6 +24,6 @@ int main(int argc, char *argv[])
 
     while ((Symbol = lexer.get_next_token()) != Symbol::Eof)
     {
-        std::cout << "Symbol: " << get_symbol_name(Symbol) << " '" << lexer.get_lexeme() << "'" << std::endl;
+        std::cout << "Symbol: " << NanoPascalLexer::get_symbol_name(Symbol) << " '" << lexer.get_lexeme() << "'" << std::endl;
     }
 }
