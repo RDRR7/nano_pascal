@@ -3,9 +3,6 @@
 
 enum class Symbol : unsigned int
 {
-    /* Non terminals, use values greater than 255 */
-
-    /* Terminals */
     KwProgram = 0,
     KwVar = 1,
     KwArray = 2,
@@ -36,18 +33,25 @@ enum class Symbol : unsigned int
     KwWriteln = 27,
     KwTo = 28,
 
-    StrLiteral = 29,
-    Number = 30,
-    Ident = 31,
-    OpAdd = 32,
-    OpSub = 33,
-    OpMul = 34,
-    OpDiv = 35,
-    OpAssign = 36,
-    OpenPar = 37,
-    ClosePar = 38,
-    Semicolon = 39,
-    Comma = 40,
+    OpenBra = 29,
+    CloseBra = 30,
+    Comma = 31,
+    Semicolon = 32,
+    OpenPar = 33,
+    ClosePar = 34,
+    OpEqual = 35,
+    OpSub = 36,
+    OpAdd = 37,
+    OpMul = 38,
+    OpLessThan = 39,
+    OpGreaterThan = 40,
+    OpNotEqual = 41,
+    OpLessThanOrEqual = 42,
+    OpGreaterThanOrEqual = 43,
+
+    StrLiteral = 44,
+    Number = 45,
+    Ident = 46,
     Eof = 255,
 };
 

@@ -80,25 +80,14 @@ static Symbol kwTk[] = {
 
 const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
 {
-
     switch (Symbol)
     {
+    case Symbol::StrLiteral:
+        return "StrLiteral";
     case Symbol::Number:
         return "Number";
     case Symbol::Ident:
         return "Identifier";
-    case Symbol::OpAdd:
-        return "Add";
-    case Symbol::OpSub:
-        return "Sub";
-    case Symbol::OpMul:
-        return "Mul";
-    case Symbol::OpenPar:
-        return "Open Par";
-    case Symbol::ClosePar:
-        return "Close Par";
-    case Symbol::Semicolon:
-        return "Semicolon";
     case Symbol::Eof:
         return "End of Input";
     case Symbol::KwProgram:
@@ -159,8 +148,37 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
         return "Writeln";
     case Symbol::KwTo:
         return "To";
+    case Symbol::OpenBra:
+        return "OpenBra";
+    case Symbol::CloseBra:
+        return "CloseBra";
+    case Symbol::Comma:
+        return "Comma";
+    case Symbol::Semicolon:
+        return "Semicolon";
+    case Symbol::OpenPar:
+        return "OpenPar";
+    case Symbol::ClosePar:
+        return "ClosePar";
+    case Symbol::OpEqual:
+        return "OpEqual";
+    case Symbol::OpSub:
+        return "OpSub";
+    case Symbol::OpAdd:
+        return "OpAdd";
+    case Symbol::OpMul:
+        return "OpMul";
+    case Symbol::OpLessThan:
+        return "OpLessThan";
+    case Symbol::OpGreaterThan:
+        return "OpGreaterThan";
+    case Symbol::OpNotEqual:
+        return "OpNotEqual";
+    case Symbol::OpLessThanOrEqual:
+        return "OpLessThanOrEqual";
+    case Symbol::OpGreaterThanOrEqual:
+        return "OpGreaterThanOrEqual";
     }
-
     return "Unknown";
 }
 
@@ -208,22 +226,52 @@ Symbol NanoPascalLexer::get_next_token()
 
         switch (this->current_symbol)
         {
-        case '+':
-            RETURN_TOKEN(Symbol::OpAdd);
-        case '-':
-            RETURN_TOKEN(Symbol::OpSub);
-        case '*':
-            RETURN_TOKEN(Symbol::OpMul);
-        case '/':
-            RETURN_TOKEN(Symbol::OpDiv);
-        case '(':
-            RETURN_TOKEN(Symbol::OpenPar);
-        case ')':
-            RETURN_TOKEN(Symbol::ClosePar);
+        case '[':
+            RETURN_TOKEN(Symbol::OpenBra);
+        case ']':
+            RETURN_TOKEN(Symbol::CloseBra);
         case ',':
             RETURN_TOKEN(Symbol::Comma);
         case ';':
             RETURN_TOKEN(Symbol::Semicolon);
+        case '(':
+            RETURN_TOKEN(Symbol::OpenPar);
+        case ')':
+            RETURN_TOKEN(Symbol::ClosePar);
+        case '=':
+            RETURN_TOKEN(Symbol::OpEqual);
+        case '-':
+            RETURN_TOKEN(Symbol::OpSub);
+        case '+':
+            RETURN_TOKEN(Symbol::OpAdd);
+        case '*':
+            RETURN_TOKEN(Symbol::OpMul);
+        case '<':
+            get_next_symbol();
+            if (this->current_symbol == '>')
+            {
+                this->lexeme = "<>";
+                get_next_symbol();
+                return Symbol::OpNotEqual;
+            }
+            else if (this->current_symbol == '=')
+            {
+                this->lexeme = "<=";
+                get_next_symbol();
+                return Symbol::OpLessThanOrEqual;
+            }
+            this->lexeme = '<';
+            return Symbol::OpLessThan;
+        case '>':
+            get_next_symbol();
+            if (this->current_symbol == '=')
+            {
+                this->lexeme = ">=";
+                get_next_symbol();
+                return Symbol::OpGreaterThanOrEqual;
+            }
+            this->lexeme = '>';
+            return Symbol::OpGreaterThan;
         case EOF:
             RETURN_TOKEN(Symbol::Eof);
         default:
