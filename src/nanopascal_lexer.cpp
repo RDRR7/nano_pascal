@@ -248,7 +248,38 @@ Symbol NanoPascalLexer::get_next_token()
         case ';':
             RETURN_TOKEN(Symbol::Semicolon);
         case '(':
-            RETURN_TOKEN(Symbol::OpenPar);
+            get_next_symbol();
+            if (this->current_symbol == '*')
+            {
+                get_next_symbol();
+                do
+                {
+                    if (this->current_symbol == '*')
+                    {
+                        get_next_symbol();
+                        if (this->current_symbol == ')')
+                        {
+                            get_next_symbol();
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        get_next_symbol();
+                    }
+                } while (this->current_symbol != EOF);
+                if (this->current_symbol == EOF)
+                {
+                    std::cerr << "Unclosed comment" << std::endl;
+                    exit(1);
+                }
+                break;
+            }
+            else
+            {
+                this->lexeme = '(';
+                return Symbol::OpenPar;
+            }
         case ')':
             RETURN_TOKEN(Symbol::ClosePar);
         case '=':
@@ -344,6 +375,26 @@ Symbol NanoPascalLexer::get_next_token()
             }
             std::cerr << "Invalid symbol /" << std::endl;
             exit(1);
+        case '{':
+            get_next_symbol();
+            do
+            {
+                if (this->current_symbol == '}')
+                {
+                    get_next_symbol();
+                    break;
+                }
+                else
+                {
+                    get_next_symbol();
+                }
+            } while (this->current_symbol != EOF);
+            if (this->current_symbol == EOF)
+            {
+                std::cerr << "Unclosed comment" << std::endl;
+                exit(1);
+            }
+            break;
         case EOF:
             RETURN_TOKEN(Symbol::Eof);
         default:
