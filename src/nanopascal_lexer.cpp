@@ -84,8 +84,6 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
     {
     case Symbol::Number:
         return "Number";
-    case Symbol::Ident:
-        return "Identifier";
     case Symbol::Eof:
         return "End of Input";
     case Symbol::KwProgram:
@@ -186,6 +184,8 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
         return "OpRightShift";
     case Symbol::StringConstant:
         return "StringConstant";
+    case Symbol::ID:
+        return "ID";
     }
     return "Unknown";
 }
@@ -208,8 +208,7 @@ Symbol NanoPascalLexer::look_up_keyword()
             return kwTk[i];
         }
     }
-
-    return Symbol::Ident;
+    return Symbol::ID;
 }
 
 Symbol NanoPascalLexer::get_next_token()
@@ -304,7 +303,9 @@ Symbol NanoPascalLexer::get_next_token()
             return Symbol::Colon;
         case '\'':
             get_next_symbol();
-            append_sequence([](char ch) { return ch != '\'' && ch != '\n' && ch != EOF; });
+            append_sequence([](char ch) { return ch != '\'' &&
+                                                 ch != '\n' &&
+                                                 ch != EOF; });
             if (this->current_symbol == '\'')
             {
                 get_next_symbol();
