@@ -54,8 +54,9 @@ enum class Symbol : unsigned int
     OpRightShift = 47,
     StringConstant = 48,
     ID = 49,
-
-    Number = 50,
+    IntConstantDec = 50,
+    IntConstantHex = 51,
+    IntConstantBin = 52,
     Eof = 255,
 };
 

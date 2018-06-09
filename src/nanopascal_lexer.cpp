@@ -82,8 +82,6 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
 {
     switch (Symbol)
     {
-    case Symbol::Number:
-        return "Number";
     case Symbol::Eof:
         return "End of Input";
     case Symbol::KwProgram:
@@ -186,6 +184,12 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
         return "StringConstant";
     case Symbol::ID:
         return "ID";
+    case Symbol::IntConstantDec:
+        return "IntConstantDec";
+    case Symbol::IntConstantHex:
+        return "IntConstantHex";
+    case Symbol::IntConstantBin:
+        return "IntConstantBin";
     }
     return "Unknown";
 }
@@ -319,13 +323,34 @@ Symbol NanoPascalLexer::get_next_token()
             if (isdigit(this->current_symbol))
             {
                 append_sequence([](char ch) { return isdigit(ch); });
-                return Symbol::Number;
+                return Symbol::IntConstantDec;
+            }
+            else if (this->current_symbol == '$')
+            {
+                get_next_symbol();
+                if (isxdigit(this->current_symbol))
+                {
+                    append_sequence([](char ch) { return isxdigit(ch); });
+                    return Symbol::IntConstantHex;
+                }
+                std::cerr << "Expected hexadecimal int constant" << std::endl;
+                exit(1);
+            }
+            else if (this->current_symbol == '%')
+            {
+                get_next_symbol();
+                if (this->current_symbol == '0' || this->current_symbol == '1')
+                {
+                    append_sequence([](char ch) { return ch == '0' || ch == '1'; });
+                    return Symbol::IntConstantBin;
+                }
+                std::cerr << "Expected binary int constant" << this->current_symbol << std::endl;
+                exit(1);
             }
             else if (isalpha(this->current_symbol) || this->current_symbol == '_')
             {
-                append_sequence([](char ch) { return isalpha(ch) ||
-                                                     (ch == '_') ||
-                                                     isdigit(ch); });
+                append_sequence([](char ch) { return isalnum(ch) ||
+                                                     (ch == '_'); });
                 return look_up_keyword();
             }
             else
