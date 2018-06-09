@@ -20,6 +20,7 @@ enum class Symbol : unsigned int
     KwMod = 14,
     KwBegin = 15,
     KwEnd = 16,
+    KwEndDot = 54,
     KwBreak = 17,
     KwIf = 18,
     KwThen = 19,

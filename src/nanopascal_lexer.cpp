@@ -31,6 +31,7 @@ static const char *kw[] = {
     "mod",
     "begin",
     "end",
+    "end.",
     "break",
     "if",
     "then",
@@ -64,6 +65,7 @@ static Symbol kwTk[] = {
     Symbol::KwMod,
     Symbol::KwBegin,
     Symbol::KwEnd,
+    Symbol::KwEndDot,
     Symbol::KwBreak,
     Symbol::KwIf,
     Symbol::KwThen,
@@ -118,6 +120,8 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
         return "Begin";
     case Symbol::KwEnd:
         return "End";
+    case Symbol::KwEndDot:
+        return "EndDot";
     case Symbol::KwBreak:
         return "Break";
     case Symbol::KwIf:
@@ -259,7 +263,6 @@ Symbol NanoPascalLexer::get_next_token()
                         get_next_symbol();
                         if (this->current_symbol == ')')
                         {
-                            get_next_symbol();
                             break;
                         }
                     }
@@ -273,6 +276,7 @@ Symbol NanoPascalLexer::get_next_token()
                     std::cerr << "Unclosed comment" << std::endl;
                     exit(1);
                 }
+                get_next_symbol();
                 break;
             }
             else
@@ -381,7 +385,6 @@ Symbol NanoPascalLexer::get_next_token()
             {
                 if (this->current_symbol == '}')
                 {
-                    get_next_symbol();
                     break;
                 }
                 else
@@ -394,6 +397,7 @@ Symbol NanoPascalLexer::get_next_token()
                 std::cerr << "Unclosed comment" << std::endl;
                 exit(1);
             }
+            get_next_symbol();
             break;
         case EOF:
             RETURN_TOKEN(Symbol::Eof);
@@ -427,8 +431,14 @@ Symbol NanoPascalLexer::get_next_token()
             }
             else if (isalpha(this->current_symbol) || this->current_symbol == '_')
             {
-                append_sequence([](char ch) { return isalnum(ch) ||
-                                                     (ch == '_'); });
+                append_sequence([this](char ch) {
+                    if(ch == '.' && strcasecmp("end", this->lexeme.c_str()) == 0)
+                    {
+                        this->lexeme += ch;
+                        get_next_symbol();
+                    }
+                    return isalnum(ch) ||
+                           (ch == '_'); });
                 return look_up_keyword();
             }
             else
