@@ -178,6 +178,14 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
         return "OpLessThanOrEqual";
     case Symbol::OpGreaterThanOrEqual:
         return "OpGreaterThanOrEqual";
+    case Symbol::Assign:
+        return "Assign";
+    case Symbol::Colon:
+        return "Colon";
+    case Symbol::OpLeftShift:
+        return "OpLeftShift";
+    case Symbol::OpRightShift:
+        return "OpRightShift";
     }
     return "Unknown";
 }
@@ -260,6 +268,12 @@ Symbol NanoPascalLexer::get_next_token()
                 get_next_symbol();
                 return Symbol::OpLessThanOrEqual;
             }
+            else if (this->current_symbol == '<')
+            {
+                this->lexeme = "<<";
+                get_next_symbol();
+                return Symbol::OpLeftShift;
+            }
             this->lexeme = '<';
             return Symbol::OpLessThan;
         case '>':
@@ -270,8 +284,24 @@ Symbol NanoPascalLexer::get_next_token()
                 get_next_symbol();
                 return Symbol::OpGreaterThanOrEqual;
             }
+            else if (this->current_symbol == '>')
+            {
+                this->lexeme = ">>";
+                get_next_symbol();
+                return Symbol::OpRightShift;
+            }
             this->lexeme = '>';
             return Symbol::OpGreaterThan;
+        case ':':
+            get_next_symbol();
+            if (this->current_symbol == '=')
+            {
+                this->lexeme = ":=";
+                get_next_symbol();
+                return Symbol::Assign;
+            }
+            this->lexeme = ':';
+            return Symbol::Colon;
         case EOF:
             RETURN_TOKEN(Symbol::Eof);
         default:

@@ -48,10 +48,14 @@ enum class Symbol : unsigned int
     OpNotEqual = 41,
     OpLessThanOrEqual = 42,
     OpGreaterThanOrEqual = 43,
+    Assign = 44,
+    Colon = 45,
+    OpLeftShift = 46,
+    OpRightShift = 47,
 
-    StrLiteral = 44,
-    Number = 45,
-    Ident = 46,
+    StrLiteral = 48,
+    Number = 49,
+    Ident = 50,
     Eof = 255,
 };
 
