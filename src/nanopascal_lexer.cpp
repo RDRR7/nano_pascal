@@ -332,6 +332,18 @@ Symbol NanoPascalLexer::get_next_token()
             }
             std::cerr << "Missing closing \' in string constant" << std::endl;
             exit(1);
+        case '/':
+            get_next_symbol();
+            if (this->current_symbol == '/')
+            {
+                do
+                {
+                    get_next_symbol();
+                } while (this->current_symbol != '\n');
+                break;
+            }
+            std::cerr << "Invalid symbol /" << std::endl;
+            exit(1);
         case EOF:
             RETURN_TOKEN(Symbol::Eof);
         default:
