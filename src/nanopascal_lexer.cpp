@@ -309,9 +309,13 @@ Symbol NanoPascalLexer::get_next_token()
             return Symbol::Colon;
         case '\'':
             get_next_symbol();
-            append_sequence([](char ch) { return ch != '\'' &&
-                                                 ch != '\n' &&
-                                                 ch != EOF; });
+            append_sequence([this](char ch) {
+                if(ch=='\"'){
+                    this->current_symbol = '\'';
+                }
+                return ch != '\'' &&
+                       ch != '\n' &&
+                       ch != EOF; });
             if (this->current_symbol == '\'')
             {
                 get_next_symbol();
