@@ -52,8 +52,8 @@ enum class Symbol : unsigned int
     Colon = 45,
     OpLeftShift = 46,
     OpRightShift = 47,
+    StringConstant = 48,
 
-    StrLiteral = 48,
     Number = 49,
     Ident = 50,
     Eof = 255,

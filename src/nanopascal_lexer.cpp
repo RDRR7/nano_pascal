@@ -82,8 +82,6 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
 {
     switch (Symbol)
     {
-    case Symbol::StrLiteral:
-        return "StrLiteral";
     case Symbol::Number:
         return "Number";
     case Symbol::Ident:
@@ -186,6 +184,8 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
         return "OpLeftShift";
     case Symbol::OpRightShift:
         return "OpRightShift";
+    case Symbol::StringConstant:
+        return "StringConstant";
     }
     return "Unknown";
 }
@@ -302,6 +302,16 @@ Symbol NanoPascalLexer::get_next_token()
             }
             this->lexeme = ':';
             return Symbol::Colon;
+        case '\'':
+            get_next_symbol();
+            append_sequence([](char ch) { return ch != '\'' && ch != '\n' && ch != EOF; });
+            if (this->current_symbol == '\'')
+            {
+                get_next_symbol();
+                return Symbol::StringConstant;
+            }
+            std::cerr << "Missing closing \' in string constant" << std::endl;
+            exit(1);
         case EOF:
             RETURN_TOKEN(Symbol::Eof);
         default:
@@ -316,13 +326,6 @@ Symbol NanoPascalLexer::get_next_token()
                                                      (ch == '_') ||
                                                      isdigit(ch); });
                 return look_up_keyword();
-            }
-            else if (this->current_symbol == '\'')
-            {
-                get_next_symbol();
-                append_sequence([](char ch) { return ch != '\''; });
-                get_next_symbol();
-                return Symbol::StrLiteral;
             }
             else
             {
