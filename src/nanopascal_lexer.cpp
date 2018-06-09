@@ -190,6 +190,8 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
         return "IntConstantHex";
     case Symbol::IntConstantBin:
         return "IntConstantBin";
+    case Symbol::CharConstant:
+        return "CharConstant";
     }
     return "Unknown";
 }
@@ -313,6 +315,15 @@ Symbol NanoPascalLexer::get_next_token()
             if (this->current_symbol == '\'')
             {
                 get_next_symbol();
+                if (this->lexeme.length() == 0)
+                {
+                    std::cerr << "Invalid empty string" << std::endl;
+                    exit(1);
+                }
+                else if (this->lexeme.length() == 1)
+                {
+                    return Symbol::CharConstant;
+                }
                 return Symbol::StringConstant;
             }
             std::cerr << "Missing closing \' in string constant" << std::endl;

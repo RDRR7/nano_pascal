@@ -57,6 +57,8 @@ enum class Symbol : unsigned int
     IntConstantDec = 50,
     IntConstantHex = 51,
     IntConstantBin = 52,
+    CharConstant = 53,
+
     Eof = 255,
 };
 
