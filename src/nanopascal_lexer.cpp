@@ -44,6 +44,11 @@ static const char *kw[] = {
     "write",
     "writeln",
     "to",
+    "function",
+    "procedure",
+    "read",
+    "true",
+    "false",
     0,
 };
 
@@ -78,6 +83,11 @@ static Symbol kwTk[] = {
     Symbol::KwWrite,
     Symbol::KwWriteln,
     Symbol::KwTo,
+    Symbol::KwFunction,
+    Symbol::KwProcedure,
+    Symbol::KwRead,
+    Symbol::KwTrue,
+    Symbol::KwFalse,
 };
 
 const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
@@ -146,6 +156,16 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
         return "Writeln";
     case Symbol::KwTo:
         return "To";
+    case Symbol::KwFunction:
+        return "Function";
+    case Symbol::KwProcedure:
+        return "Procedure";
+    case Symbol::KwRead:
+        return "Read";
+    case Symbol::KwTrue:
+        return "True";
+    case Symbol::KwFalse:
+        return "False";
     case Symbol::OpenBra:
         return "OpenBra";
     case Symbol::CloseBra:
@@ -196,6 +216,8 @@ const char *NanoPascalLexer::get_symbol_name(Symbol Symbol)
         return "IntConstantBin";
     case Symbol::CharConstant:
         return "CharConstant";
+    case Symbol::DotDot:
+        return "DotDot";
     }
     return "Unknown";
 }
@@ -399,6 +421,16 @@ Symbol NanoPascalLexer::get_next_token()
             }
             get_next_symbol();
             break;
+        case '.':
+            get_next_symbol();
+            if (this->current_symbol == '.')
+            {
+                this->lexeme = "..";
+                get_next_symbol();
+                return Symbol::DotDot;
+            }
+            std::cerr << "Invalid symbol ." << std::endl;
+            exit(1);
         case EOF:
             RETURN_TOKEN(Symbol::Eof);
         default:

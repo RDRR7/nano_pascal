@@ -33,6 +33,11 @@ enum class Symbol : unsigned int
     KwWrite = 26,
     KwWriteln = 27,
     KwTo = 28,
+    KwFunction = 56,
+    KwProcedure = 57,
+    KwRead = 58,
+    KwTrue = 59,
+    KwFalse = 60,
 
     OpenBra = 29,
     CloseBra = 30,
@@ -59,6 +64,7 @@ enum class Symbol : unsigned int
     IntConstantHex = 51,
     IntConstantBin = 52,
     CharConstant = 53,
+    DotDot = 55,
 
     Eof = 255,
 };
