@@ -40,6 +40,6 @@ private:
   void append_sequence(std::function<bool(char)> func);
   void get_next_symbol() { this->current_symbol = in.get(); }
   Symbol look_up_keyword();
-  bool directive_exists(std::string);
+  bool is_directive_defined(std::string);
 };
 #endif

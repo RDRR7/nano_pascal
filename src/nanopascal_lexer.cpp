@@ -243,7 +243,7 @@ Symbol NanoPascalLexer::look_up_keyword()
 	return Symbol::ID;
 }
 
-bool NanoPascalLexer::directive_exists(std::string)
+bool NanoPascalLexer::is_directive_defined(std::string)
 {
 	for (std::string directive : this->directives)
 	{
@@ -417,14 +417,19 @@ Symbol NanoPascalLexer::get_next_token()
 			do
 			{
 				this->lexeme += this->current_symbol;
-				if (strcasecmp("$ifdef ", this->lexeme.c_str()) == 0)
+				if (strcasecmp("$ifdef ", this->lexeme.c_str()) == 0 || strcasecmp("$ifndef ", this->lexeme.c_str()) == 0)
 				{
+					bool is_ifdef = false;
+					if (strcasecmp("$ifdef ", this->lexeme.c_str()) == 0)
+					{
+						is_ifdef = true;
+					}
 					get_next_symbol();
 					this->lexeme = "";
 					append_sequence([](char ch) { return isalnum(ch) ||
 														 (ch == '_'); });
 
-					if (directive_exists(this->lexeme))
+					if ((is_directive_defined(this->lexeme) && is_ifdef) || (!is_directive_defined(this->lexeme) && !is_ifdef))
 					{
 						this->directives_stack.push(0);
 					}
