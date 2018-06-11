@@ -20,7 +20,6 @@ enum class Symbol : unsigned int
     KwMod = 14,
     KwBegin = 15,
     KwEnd = 16,
-    KwEndDot = 54,
     KwBreak = 17,
     KwIf = 18,
     KwThen = 19,
@@ -66,6 +65,7 @@ enum class Symbol : unsigned int
     IntConstantBin = 52,
     CharConstant = 53,
     DotDot = 55,
+    Dot = 62,
 
     Eof = 255,
 };
@@ -120,8 +120,6 @@ static const char *get_symbol_name(Symbol symbol)
         return "Begin";
     case Symbol::KwEnd:
         return "End";
-    case Symbol::KwEndDot:
-        return "EndDot";
     case Symbol::KwBreak:
         return "Break";
     case Symbol::KwIf:
@@ -210,6 +208,8 @@ static const char *get_symbol_name(Symbol symbol)
         return "CharConstant";
     case Symbol::DotDot:
         return "DotDot";
+    case Symbol::Dot:
+        return "Dot";
     }
     return "Unknown";
 }
