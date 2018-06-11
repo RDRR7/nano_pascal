@@ -452,16 +452,60 @@ Symbol NanoPascalLexer::get_next_token()
 						while (this->current_symbol != EOF)
 						{
 							this->lexeme += this->current_symbol;
+							if (this->lexeme.length() >= 8 && strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 8], "{$ifdef ") == 0 || this->lexeme.length() >= 9 && strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 9], "{$ifndef ") == 0)
+							{
+								get_next_symbol();
+								append_sequence([](char ch) { return isalnum(ch) ||
+																	 (ch == '_'); });
+
+								directives_stack.push(2);
+								if (this->current_symbol != '}')
+								{
+									std::cerr << "Unclosed directive" << std::endl;
+									exit(1);
+								}
+								get_next_symbol();
+							}
 							if (this->lexeme.length() >= 7 && strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 7], "{$endif") == 0)
 							{
+								if (directives_stack.top() != 2)
+								{
+									directives_stack.pop();
+									get_next_symbol();
+									if (this->current_symbol != '}')
+									{
+										std::cerr << "Unclosed directive" << std::endl;
+										exit(1);
+									}
+									break;
+								}
+
 								directives_stack.pop();
 								get_next_symbol();
-								break;
+								if (this->current_symbol != '}')
+								{
+									std::cerr << "Unclosed directive" << std::endl;
+									exit(1);
+								}
 							}
 							if (this->lexeme.length() >= 6 && strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 6], "{$else") == 0)
 							{
+								if (directives_stack.top() != 2)
+								{
+									get_next_symbol();
+									if (this->current_symbol != '}')
+									{
+										std::cerr << "Unclosed directive" << std::endl;
+										exit(1);
+									}
+									break;
+								}
 								get_next_symbol();
-								break;
+								if (this->current_symbol != '}')
+								{
+									std::cerr << "Unclosed directive" << std::endl;
+									exit(1);
+								}
 							}
 							get_next_symbol();
 						}
@@ -495,6 +539,11 @@ Symbol NanoPascalLexer::get_next_token()
 								{
 									directives_stack.pop();
 									get_next_symbol();
+									if (this->current_symbol != '}')
+									{
+										std::cerr << "Unclosed directive" << std::endl;
+										exit(1);
+									}
 									break;
 								}
 								get_next_symbol();
@@ -519,6 +568,11 @@ Symbol NanoPascalLexer::get_next_token()
 					{
 						directives_stack.pop();
 						get_next_symbol();
+						if (this->current_symbol != '}')
+						{
+							std::cerr << "Unclosed directive" << std::endl;
+							exit(1);
+						}
 					}
 					else
 					{
