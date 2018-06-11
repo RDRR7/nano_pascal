@@ -37,7 +37,14 @@ private:
   std::stack<int> directives_stack;
 
   void append_sequence(std::function<bool(char)> func);
-  void get_next_symbol() { this->current_symbol = in.get(); }
+  void get_next_symbol()
+  {
+    this->current_symbol = in.get();
+    if (this->current_symbol != EOF)
+    {
+      this->column_number++;
+    }
+  }
   Symbol look_up_keyword();
   bool is_directive_defined(std::string);
 };

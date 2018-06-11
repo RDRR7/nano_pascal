@@ -137,7 +137,6 @@ Symbol NanoPascalLexer::get_next_token()
 		}
 		if (this->current_symbol == ' ' || this->current_symbol == '\t')
 		{
-			this->column_number++;
 			get_next_symbol();
 			continue;
 		}
