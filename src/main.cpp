@@ -1,12 +1,15 @@
 #include <iostream>
 #include <fstream>
+#include <list>
+#include <string>
+
 #include "nanopascal_lexer.h"
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
+    if (argc < 2)
     {
-        std::cerr << "Usage " << argv[0] << " <input file>" << std::endl;
+        std::cerr << "Usage " << argv[0] << " <input file> [-d<directive>]..." << std::endl;
         return 1;
     }
 
@@ -18,7 +21,21 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    NanoPascalLexer lexer(in);
+    std::list<std::string> directives;
+    for (int i = 2; i < argc; i++)
+    {
+        if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2] != '\0')
+        {
+            directives.push_back(&argv[i][2]);
+        }
+        else
+        {
+            std::cerr << "Usage " << argv[0] << " " << argv[1] << " [-d<directive>]..." << std::endl;
+            return 1;
+        }
+    }
+
+    NanoPascalLexer lexer(in, directives);
 
     Symbol Symbol;
 

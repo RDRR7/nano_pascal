@@ -13,12 +13,13 @@
 class NanoPascalLexer
 {
 public:
-  NanoPascalLexer(std::ifstream &in) : in(in)
+  NanoPascalLexer(std::ifstream &in, std::list<std::string> directives) : in(in)
   {
     get_next_symbol();
     this->line_number = 1;
     this->column_number = 0;
-    this->directives.push_back("NANOPASCAL");
+    this->directives = directives;
+    this->directives.push_front("NANOPASCAL");
   }
 
   Symbol get_next_token();
