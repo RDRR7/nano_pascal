@@ -31,7 +31,6 @@ static const char *kw[] = {
 	"mod",
 	"begin",
 	"end",
-	"end.",
 	"break",
 	"if",
 	"then",
@@ -49,6 +48,7 @@ static const char *kw[] = {
 	"read",
 	"true",
 	"false",
+	"continue",
 	0,
 };
 
@@ -70,7 +70,6 @@ static Symbol kwTk[] = {
 	Symbol::KwMod,
 	Symbol::KwBegin,
 	Symbol::KwEnd,
-	Symbol::KwEndDot,
 	Symbol::KwBreak,
 	Symbol::KwIf,
 	Symbol::KwThen,
@@ -88,6 +87,7 @@ static Symbol kwTk[] = {
 	Symbol::KwRead,
 	Symbol::KwTrue,
 	Symbol::KwFalse,
+	Symbol::KwContinue,
 };
 
 void NanoPascalLexer::append_sequence(std::function<bool(char)> func)
@@ -474,8 +474,8 @@ Symbol NanoPascalLexer::get_next_token()
 				get_next_symbol();
 				return Symbol::DotDot;
 			}
-			std::cerr << "Invalid symbol ." << std::endl;
-			exit(1);
+			this->lexeme = ".";
+			return Symbol::Dot;
 		case EOF:
 			if (!directives_stack.empty())
 			{
@@ -513,14 +513,8 @@ Symbol NanoPascalLexer::get_next_token()
 			}
 			else if (isalpha(this->current_symbol) || this->current_symbol == '_')
 			{
-				append_sequence([this](char ch) {
-					if(ch == '.' && strcasecmp("end", this->lexeme.c_str()) == 0)
-					{
-						this->lexeme += ch;
-						get_next_symbol();
-					}
-					return isalnum(ch) ||
-						   (ch == '_'); });
+				append_sequence([](char ch) { return isalnum(ch) ||
+													 (ch == '_'); });
 				return look_up_keyword();
 			}
 			else
