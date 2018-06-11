@@ -5,6 +5,8 @@
 #include <fstream>
 #include <string>
 #include <functional>
+#include <list>
+#include <stack>
 
 #include "nanopascal_symbols.h"
 
@@ -16,6 +18,7 @@ public:
     get_next_symbol();
     this->line_number = 1;
     this->column_number = 0;
+    this->directives.push_back("NANOPASCAL");
   }
 
   static const char *get_symbol_name(Symbol Symbol);
@@ -31,9 +34,12 @@ private:
   std::string lexeme;
   int line_number;
   int column_number;
+  std::list<std::string> directives;
+  std::stack<int> directives_stack;
 
   void append_sequence(std::function<bool(char)> func);
   void get_next_symbol() { this->current_symbol = in.get(); }
   Symbol look_up_keyword();
+  bool directive_exists(std::string);
 };
 #endif
