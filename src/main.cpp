@@ -24,6 +24,6 @@ int main(int argc, char *argv[])
 
     while ((Symbol = lexer.get_next_token()) != Symbol::Eof)
     {
-        std::cout << "Symbol: " << NanoPascalLexer::get_symbol_name(Symbol) << " '" << lexer.get_lexeme() << "'" << std::endl;
+        std::cout << "Symbol: " << get_symbol_name(Symbol) << " '" << lexer.get_lexeme() << "'" << std::endl;
     }
 }

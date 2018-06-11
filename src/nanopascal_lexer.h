@@ -21,8 +21,6 @@ public:
     this->directives.push_back("NANOPASCAL");
   }
 
-  static const char *get_symbol_name(Symbol Symbol);
-
   Symbol get_next_token();
   std::string get_lexeme() { return this->lexeme; }
   int get_line_number() { return this->line_number; }
