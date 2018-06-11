@@ -49,6 +49,7 @@ static const char *kw[] = {
 	"read",
 	"true",
 	"false",
+	"continue",
 	0,
 };
 
@@ -88,6 +89,7 @@ static Symbol kwTk[] = {
 	Symbol::KwRead,
 	Symbol::KwTrue,
 	Symbol::KwFalse,
+	Symbol::KwContinue,
 };
 
 void NanoPascalLexer::append_sequence(std::function<bool(char)> func)

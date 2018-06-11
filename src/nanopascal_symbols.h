@@ -38,6 +38,7 @@ enum class Symbol : unsigned int
     KwRead = 58,
     KwTrue = 59,
     KwFalse = 60,
+    KwContinue = 61,
 
     OpenBra = 29,
     CloseBra = 30,
@@ -155,6 +156,8 @@ static const char *get_symbol_name(Symbol symbol)
         return "True";
     case Symbol::KwFalse:
         return "False";
+    case Symbol::KwContinue:
+        return "Continue";
     case Symbol::OpenBra:
         return "OpenBra";
     case Symbol::CloseBra:
