@@ -111,11 +111,11 @@ Symbol NanoPascalLexer::look_up_keyword()
 	return Symbol::ID;
 }
 
-bool NanoPascalLexer::is_directive_defined(std::string)
+bool NanoPascalLexer::is_directive_defined(std::string directive)
 {
-	for (std::string directive : this->directives)
+	for (std::string defined_directive : this->directives)
 	{
-		if (strcasecmp(directive.c_str(), this->lexeme.c_str()) == 0)
+		if (strcasecmp(defined_directive.c_str(), directive.c_str()) == 0)
 		{
 			return true;
 		}
@@ -123,19 +123,19 @@ bool NanoPascalLexer::is_directive_defined(std::string)
 	return false;
 }
 
+void NanoPascalLexer::print_error(std::string error)
+{
+	std::cerr << "lexer:" << this->line_number << ":" << this->column_number << ": " << error << std::endl;
+}
+
 Symbol NanoPascalLexer::get_next_token()
 {
 	this->lexeme = "";
 	while (1)
 	{
-		if (this->current_symbol == '\n')
-		{
-			this->line_number++;
-			this->column_number = 1;
-			get_next_symbol();
-			continue;
-		}
-		if (this->current_symbol == ' ' || this->current_symbol == '\t')
+		if (this->current_symbol == ' ' ||
+			this->current_symbol == '\t' ||
+			this->current_symbol == '\n')
 		{
 			get_next_symbol();
 			continue;
@@ -173,7 +173,7 @@ Symbol NanoPascalLexer::get_next_token()
 				} while (this->current_symbol != EOF);
 				if (this->current_symbol == EOF)
 				{
-					std::cerr << "Unclosed comment" << std::endl;
+					print_error("Unclosed comment");
 					exit(1);
 				}
 				get_next_symbol();
@@ -256,7 +256,7 @@ Symbol NanoPascalLexer::get_next_token()
 				get_next_symbol();
 				if (this->lexeme.length() == 0)
 				{
-					std::cerr << "Invalid empty string" << std::endl;
+					print_error("Invalid empty string");
 					exit(1);
 				}
 				else if (this->lexeme.length() == 1)
@@ -265,7 +265,7 @@ Symbol NanoPascalLexer::get_next_token()
 				}
 				return Symbol::StringConstant;
 			}
-			std::cerr << "Missing closing \' in string constant" << std::endl;
+			print_error("Missing closing \' in string constant");
 			exit(1);
 		case '/':
 			get_next_symbol();
@@ -277,14 +277,15 @@ Symbol NanoPascalLexer::get_next_token()
 				} while (this->current_symbol != '\n');
 				break;
 			}
-			std::cerr << "Invalid symbol /" << std::endl;
+			print_error("Invalid symbol /");
 			exit(1);
 		case '{':
 			get_next_symbol();
 			do
 			{
 				this->lexeme += this->current_symbol;
-				if (strcasecmp("$ifdef ", this->lexeme.c_str()) == 0 || strcasecmp("$ifndef ", this->lexeme.c_str()) == 0)
+				if (strcasecmp("$ifdef ", this->lexeme.c_str()) == 0 ||
+					strcasecmp("$ifndef ", this->lexeme.c_str()) == 0)
 				{
 					bool is_ifdef = false;
 					if (strcasecmp("$ifdef ", this->lexeme.c_str()) == 0)
@@ -296,7 +297,8 @@ Symbol NanoPascalLexer::get_next_token()
 					append_sequence([](char ch) { return isalnum(ch) ||
 														 (ch == '_'); });
 
-					if ((is_directive_defined(this->lexeme) && is_ifdef) || (!is_directive_defined(this->lexeme) && !is_ifdef))
+					if ((is_directive_defined(this->lexeme) && is_ifdef) ||
+						(!is_directive_defined(this->lexeme) && !is_ifdef))
 					{
 						this->directives_stack.push(0);
 					}
@@ -307,7 +309,7 @@ Symbol NanoPascalLexer::get_next_token()
 
 					if (this->current_symbol != '}')
 					{
-						std::cerr << "Unclosed directive" << std::endl;
+						print_error("Unclosed directive");
 						exit(1);
 					}
 
@@ -319,7 +321,10 @@ Symbol NanoPascalLexer::get_next_token()
 						while (this->current_symbol != EOF)
 						{
 							this->lexeme += this->current_symbol;
-							if (this->lexeme.length() >= 8 && strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 8], "{$ifdef ") == 0 || this->lexeme.length() >= 9 && strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 9], "{$ifndef ") == 0)
+							if ((this->lexeme.length() >= 8 &&
+								 strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 8], "{$ifdef ") == 0) ||
+								(this->lexeme.length() >= 9 &&
+								 strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 9], "{$ifndef ") == 0))
 							{
 								get_next_symbol();
 								append_sequence([](char ch) { return isalnum(ch) ||
@@ -328,12 +333,13 @@ Symbol NanoPascalLexer::get_next_token()
 								directives_stack.push(2);
 								if (this->current_symbol != '}')
 								{
-									std::cerr << "Unclosed directive" << std::endl;
+									print_error("Unclosed directive");
 									exit(1);
 								}
 								get_next_symbol();
 							}
-							if (this->lexeme.length() >= 7 && strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 7], "{$endif") == 0)
+							if (this->lexeme.length() >= 7 &&
+								strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 7], "{$endif") == 0)
 							{
 								if (directives_stack.top() != 2)
 								{
@@ -341,7 +347,7 @@ Symbol NanoPascalLexer::get_next_token()
 									get_next_symbol();
 									if (this->current_symbol != '}')
 									{
-										std::cerr << "Unclosed directive" << std::endl;
+										print_error("Unclosed directive");
 										exit(1);
 									}
 									break;
@@ -351,18 +357,19 @@ Symbol NanoPascalLexer::get_next_token()
 								get_next_symbol();
 								if (this->current_symbol != '}')
 								{
-									std::cerr << "Unclosed directive" << std::endl;
+									print_error("Unclosed directive");
 									exit(1);
 								}
 							}
-							if (this->lexeme.length() >= 6 && strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 6], "{$else") == 0)
+							if (this->lexeme.length() >= 6 &&
+								strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 6], "{$else") == 0)
 							{
 								if (directives_stack.top() != 2)
 								{
 									get_next_symbol();
 									if (this->current_symbol != '}')
 									{
-										std::cerr << "Unclosed directive" << std::endl;
+										print_error("Unclosed directive");
 										exit(1);
 									}
 									break;
@@ -370,7 +377,7 @@ Symbol NanoPascalLexer::get_next_token()
 								get_next_symbol();
 								if (this->current_symbol != '}')
 								{
-									std::cerr << "Unclosed directive" << std::endl;
+									print_error("Unclosed directive");
 									exit(1);
 								}
 							}
@@ -379,7 +386,7 @@ Symbol NanoPascalLexer::get_next_token()
 
 						if (this->current_symbol == EOF)
 						{
-							std::cerr << "Missing endif" << std::endl;
+							print_error("Missing endif");
 							exit(1);
 						}
 					}
@@ -390,7 +397,7 @@ Symbol NanoPascalLexer::get_next_token()
 					get_next_symbol();
 					if (this->current_symbol != '}')
 					{
-						std::cerr << "Unclosed directive" << std::endl;
+						print_error("Unclosed directive");
 						exit(1);
 					}
 
@@ -402,13 +409,14 @@ Symbol NanoPascalLexer::get_next_token()
 							while (this->current_symbol != EOF)
 							{
 								this->lexeme += this->current_symbol;
-								if (this->lexeme.length() >= 7 && strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 7], "{$endif") == 0)
+								if (this->lexeme.length() >= 7 &&
+									strcasecmp(&this->lexeme.c_str()[this->lexeme.size() - 7], "{$endif") == 0)
 								{
 									directives_stack.pop();
 									get_next_symbol();
 									if (this->current_symbol != '}')
 									{
-										std::cerr << "Unclosed directive" << std::endl;
+										print_error("Unclosed directive");
 										exit(1);
 									}
 									break;
@@ -417,14 +425,14 @@ Symbol NanoPascalLexer::get_next_token()
 							}
 							if (this->current_symbol == EOF)
 							{
-								std::cerr << "Missing endif" << std::endl;
+								print_error("Missing endif");
 								exit(1);
 							}
 						}
 					}
 					else
 					{
-						std::cerr << "Orphan else" << std::endl;
+						print_error("Orphan else");
 						exit(1);
 					}
 				}
@@ -437,13 +445,13 @@ Symbol NanoPascalLexer::get_next_token()
 						get_next_symbol();
 						if (this->current_symbol != '}')
 						{
-							std::cerr << "Unclosed directive" << std::endl;
+							print_error("Unclosed directive");
 							exit(1);
 						}
 					}
 					else
 					{
-						std::cerr << "Orphan endif" << std::endl;
+						print_error("Orphan endif");
 						exit(1);
 					}
 				}
@@ -459,7 +467,7 @@ Symbol NanoPascalLexer::get_next_token()
 			} while (this->current_symbol != EOF);
 			if (this->current_symbol == EOF)
 			{
-				std::cerr << "Unclosed comment" << std::endl;
+				print_error("Unclosed comment");
 				exit(1);
 			}
 			this->lexeme = "";
@@ -478,7 +486,7 @@ Symbol NanoPascalLexer::get_next_token()
 		case EOF:
 			if (!directives_stack.empty())
 			{
-				std::cerr << "Missing endif" << std::endl;
+				print_error("Missing endif");
 				exit(1);
 			}
 			RETURN_TOKEN(Symbol::Eof);
@@ -496,7 +504,7 @@ Symbol NanoPascalLexer::get_next_token()
 					append_sequence([](char ch) { return isxdigit(ch); });
 					return Symbol::IntConstantHex;
 				}
-				std::cerr << "Expected hexadecimal int constant" << std::endl;
+				print_error("Expected hexadecimal int constant");
 				exit(1);
 			}
 			else if (this->current_symbol == '%')
@@ -504,10 +512,11 @@ Symbol NanoPascalLexer::get_next_token()
 				get_next_symbol();
 				if (this->current_symbol == '0' || this->current_symbol == '1')
 				{
-					append_sequence([](char ch) { return ch == '0' || ch == '1'; });
+					append_sequence([](char ch) { return ch == '0' ||
+														 ch == '1'; });
 					return Symbol::IntConstantBin;
 				}
-				std::cerr << "Expected binary int constant" << this->current_symbol << std::endl;
+				print_error("Expected binary int constant");
 				exit(1);
 			}
 			else if (isalpha(this->current_symbol) || this->current_symbol == '_')
@@ -518,7 +527,7 @@ Symbol NanoPascalLexer::get_next_token()
 			}
 			else
 			{
-				std::cerr << "Invalid symbol " << this->current_symbol << std::endl;
+				print_error("Invalid symbol " + std::string(1, this->current_symbol));
 				exit(1);
 			}
 		}
