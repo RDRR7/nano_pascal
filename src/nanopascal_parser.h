@@ -34,7 +34,6 @@ class NanoPascalParser
 	void variable_decl();
 	void id_list();
 	void type();
-	void type_wo_array();
 	void array_type();
 	void subprogram_decl();
 	void subprogram_header();
@@ -56,7 +55,6 @@ class NanoPascalParser
 	void argument_list();
 	void argument();
 	void constant();
-	void bool_constant();
 	void block();
 };
 
