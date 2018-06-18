@@ -378,13 +378,15 @@ void NanoPascalParser::expr()
 		this->current_token == Symbol::ID ||
 		this->current_token == Symbol::KwWrite ||
 		this->current_token == Symbol::KwWriteln ||
-		this->current_token == Symbol::KwRead)
+		this->current_token == Symbol::KwRead ||
+		this->current_token == Symbol::KwNot ||
+		this->current_token == Symbol::OpSub)
 	{
 		exprpfi();
 	}
 	else
 	{
-		print_error("'(', 'int constant', 'char constant', 'true', 'false', 'id', 'write', 'writeln' or 'read'");
+		print_error("'(', 'int constant', 'char constant', 'true', 'false', 'id', 'write', 'writeln', 'read', 'not' or '-'");
 		exit(1);
 	}
 }
@@ -419,7 +421,7 @@ void NanoPascalParser::exprpse()
 
 void NanoPascalParser::exprpth()
 {
-	exprpfo();
+	exprpla();
 	while (this->current_token == Symbol::OpMul ||
 		   this->current_token == Symbol::KwDiv ||
 		   this->current_token == Symbol::KwMod ||
@@ -428,17 +430,6 @@ void NanoPascalParser::exprpth()
 		   this->current_token == Symbol::KwShr ||
 		   this->current_token == Symbol::OpLeftShift ||
 		   this->current_token == Symbol::OpRightShift)
-	{
-		get_next_token();
-		exprpfo();
-	}
-}
-
-void NanoPascalParser::exprpfo()
-{
-	exprpla();
-	while (this->current_token == Symbol::KwNot ||
-		   this->current_token == Symbol::OpSub)
 	{
 		get_next_token();
 		exprpla();
@@ -488,9 +479,15 @@ void NanoPascalParser::exprpla()
 			expected_token(Symbol::ClosePar, "')'");
 		}
 	}
+	else if (this->current_token == Symbol::KwNot ||
+			 this->current_token == Symbol::OpSub)
+	{
+		get_next_token();
+		expr();
+	}
 	else
 	{
-		print_error("'(', 'int constant', 'char constant', 'true', 'false', 'id', 'write', 'writeln' or 'read'");
+		print_error("'(', 'int constant', 'char constant', 'true', 'false', 'id', 'write', 'writeln', 'read', 'not' or '-'");
 		exit(1);
 	}
 }
@@ -526,7 +523,9 @@ void NanoPascalParser::subprogram_call()
 				this->current_token == Symbol::ID ||
 				this->current_token == Symbol::KwWrite ||
 				this->current_token == Symbol::KwWriteln ||
-				this->current_token == Symbol::KwRead)
+				this->current_token == Symbol::KwRead ||
+				this->current_token == Symbol::KwNot ||
+				this->current_token == Symbol::OpSub)
 			{
 				argument_list();
 			}
@@ -572,13 +571,15 @@ void NanoPascalParser::argument()
 			 this->current_token == Symbol::ID ||
 			 this->current_token == Symbol::KwWrite ||
 			 this->current_token == Symbol::KwWriteln ||
-			 this->current_token == Symbol::KwRead)
+			 this->current_token == Symbol::KwRead ||
+			 this->current_token == Symbol::KwNot ||
+			 this->current_token == Symbol::OpSub)
 	{
 		expr();
 	}
 	else
 	{
-		print_error("'string constant', (', 'int constant', 'char constant', 'true', 'false', 'id', 'write', 'writeln' or 'read'");
+		print_error("'string constant', (', 'int constant', 'char constant', 'true', 'false', 'id', 'write', 'writeln', 'read', 'not' or '-'");
 		exit(1);
 	}
 }

@@ -48,7 +48,6 @@ class NanoPascalParser
 	void exprpfi();
 	void exprpse();
 	void exprpth();
-	void exprpfo();
 	void exprpla();
 	void subprogram_call();
 	void expr_list();
