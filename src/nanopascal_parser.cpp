@@ -319,7 +319,6 @@ void NanoPascalParser::statement()
 	{
 		get_next_token();
 		assign();
-		expr();
 
 		expected_token(Symbol::KwTo, "'to'");
 
@@ -619,6 +618,8 @@ void NanoPascalParser::block()
 	}
 	else if (this->current_token == Symbol::KwBegin)
 	{
+		get_next_token();
+
 		while (this->current_token == Symbol::ID ||
 			   this->current_token == Symbol::KwWrite ||
 			   this->current_token == Symbol::KwWriteln ||
@@ -634,6 +635,7 @@ void NanoPascalParser::block()
 		}
 
 		expected_token(Symbol::KwEnd, "'end'");
+		expected_token(Symbol::Semicolon, "';'");
 	}
 	else
 	{
