@@ -37,18 +37,18 @@ void NanoPascalParser::program()
 
 	expected_token(Symbol::KwBegin, "'begin'");
 
-	while (this->current_token == Symbol::ID ||
-		   this->current_token == Symbol::KwWrite ||
-		   this->current_token == Symbol::KwWriteln ||
-		   this->current_token == Symbol::KwRead ||
-		   this->current_token == Symbol::KwIf ||
-		   this->current_token == Symbol::KwWhile ||
-		   this->current_token == Symbol::KwRepeat ||
-		   this->current_token == Symbol::KwFor ||
-		   this->current_token == Symbol::KwBreak ||
-		   this->current_token == Symbol::KwContinue)
+	if (this->current_token == Symbol::ID ||
+		this->current_token == Symbol::KwWrite ||
+		this->current_token == Symbol::KwWriteln ||
+		this->current_token == Symbol::KwRead ||
+		this->current_token == Symbol::KwIf ||
+		this->current_token == Symbol::KwWhile ||
+		this->current_token == Symbol::KwRepeat ||
+		this->current_token == Symbol::KwFor ||
+		this->current_token == Symbol::KwBreak ||
+		this->current_token == Symbol::KwContinue)
 	{
-		statement();
+		statement_list();
 	}
 
 	expected_token(Symbol::KwEnd, "'end'");
@@ -154,18 +154,18 @@ void NanoPascalParser::subprogram_decl()
 
 	expected_token(Symbol::KwBegin, "'begin'");
 
-	while (this->current_token == Symbol::ID ||
-		   this->current_token == Symbol::KwWrite ||
-		   this->current_token == Symbol::KwWriteln ||
-		   this->current_token == Symbol::KwRead ||
-		   this->current_token == Symbol::KwIf ||
-		   this->current_token == Symbol::KwWhile ||
-		   this->current_token == Symbol::KwRepeat ||
-		   this->current_token == Symbol::KwFor ||
-		   this->current_token == Symbol::KwBreak ||
-		   this->current_token == Symbol::KwContinue)
+	if (this->current_token == Symbol::ID ||
+		this->current_token == Symbol::KwWrite ||
+		this->current_token == Symbol::KwWriteln ||
+		this->current_token == Symbol::KwRead ||
+		this->current_token == Symbol::KwIf ||
+		this->current_token == Symbol::KwWhile ||
+		this->current_token == Symbol::KwRepeat ||
+		this->current_token == Symbol::KwFor ||
+		this->current_token == Symbol::KwBreak ||
+		this->current_token == Symbol::KwContinue)
 	{
-		statement();
+		statement_list();
 	}
 
 	expected_token(Symbol::KwEnd, "'end'");
@@ -265,20 +265,77 @@ void NanoPascalParser::argument_decl()
 	type();
 }
 
+void NanoPascalParser::statement_list()
+{
+	statement();
+	while (this->current_token == Symbol::Semicolon)
+	{
+		get_next_token();
+		if (this->current_token == Symbol::ID ||
+			this->current_token == Symbol::KwWrite ||
+			this->current_token == Symbol::KwWriteln ||
+			this->current_token == Symbol::KwRead ||
+			this->current_token == Symbol::KwIf ||
+			this->current_token == Symbol::KwWhile ||
+			this->current_token == Symbol::KwRepeat ||
+			this->current_token == Symbol::KwFor ||
+			this->current_token == Symbol::KwBreak ||
+			this->current_token == Symbol::KwContinue)
+		{
+			statement();
+		}
+	}
+}
+
 void NanoPascalParser::statement()
 {
 	if (this->current_token == Symbol::ID)
 	{
-		assign();
-		expected_token(Symbol::Semicolon, "';'");
+		get_next_token();
+
+		if (this->current_token == Symbol::Assign) // assign
+		{
+			get_next_token();
+			expr();
+		}
+		else if (this->current_token == Symbol::OpenBra)
+		{
+			get_next_token();
+			expr();
+
+			expected_token(Symbol::CloseBra, "']'");
+			expected_token(Symbol::Assign, "':='");
+
+			expr();
+		}
+		else if (this->current_token == Symbol::OpenPar) // subprogram_call
+		{
+			get_next_token();
+			if (this->current_token == Symbol::OpenPar ||
+				this->current_token == Symbol::IntConstantBin ||
+				this->current_token == Symbol::IntConstantDec ||
+				this->current_token == Symbol::IntConstantHex ||
+				this->current_token == Symbol::CharConstant ||
+				this->current_token == Symbol::KwTrue ||
+				this->current_token == Symbol::KwFalse ||
+				this->current_token == Symbol::ID ||
+				this->current_token == Symbol::KwWrite ||
+				this->current_token == Symbol::KwWriteln ||
+				this->current_token == Symbol::KwRead ||
+				this->current_token == Symbol::KwNot ||
+				this->current_token == Symbol::OpSub)
+			{
+				expr_list();
+			}
+
+			expected_token(Symbol::ClosePar, "')'");
+		}
 	}
-	else if (this->current_token == Symbol::ID ||
-			 this->current_token == Symbol::KwWrite ||
+	else if (this->current_token == Symbol::KwWrite ||
 			 this->current_token == Symbol::KwWriteln ||
 			 this->current_token == Symbol::KwRead)
 	{
 		subprogram_call();
-		expected_token(Symbol::Semicolon, "';'");
 	}
 	else if (this->current_token == Symbol::KwIf)
 	{
@@ -331,12 +388,10 @@ void NanoPascalParser::statement()
 	else if (this->current_token == Symbol::KwBreak)
 	{
 		get_next_token();
-		expected_token(Symbol::Semicolon, "';'");
 	}
 	else if (this->current_token == Symbol::KwContinue)
 	{
 		get_next_token();
-		expected_token(Symbol::Semicolon, "';'");
 	}
 	else
 	{
@@ -473,7 +528,22 @@ void NanoPascalParser::exprpla()
 		else if (this->current_token == Symbol::OpenPar)
 		{
 			get_next_token();
-			expr_list();
+			if (this->current_token == Symbol::OpenPar ||
+				this->current_token == Symbol::IntConstantBin ||
+				this->current_token == Symbol::IntConstantDec ||
+				this->current_token == Symbol::IntConstantHex ||
+				this->current_token == Symbol::CharConstant ||
+				this->current_token == Symbol::KwTrue ||
+				this->current_token == Symbol::KwFalse ||
+				this->current_token == Symbol::ID ||
+				this->current_token == Symbol::KwWrite ||
+				this->current_token == Symbol::KwWriteln ||
+				this->current_token == Symbol::KwRead ||
+				this->current_token == Symbol::KwNot ||
+				this->current_token == Symbol::OpSub)
+			{
+				expr_list();
+			}
 
 			expected_token(Symbol::ClosePar, "')'");
 		}
@@ -620,18 +690,18 @@ void NanoPascalParser::block()
 	{
 		get_next_token();
 
-		while (this->current_token == Symbol::ID ||
-			   this->current_token == Symbol::KwWrite ||
-			   this->current_token == Symbol::KwWriteln ||
-			   this->current_token == Symbol::KwRead ||
-			   this->current_token == Symbol::KwIf ||
-			   this->current_token == Symbol::KwWhile ||
-			   this->current_token == Symbol::KwRepeat ||
-			   this->current_token == Symbol::KwFor ||
-			   this->current_token == Symbol::KwBreak ||
-			   this->current_token == Symbol::KwContinue)
+		if (this->current_token == Symbol::ID ||
+			this->current_token == Symbol::KwWrite ||
+			this->current_token == Symbol::KwWriteln ||
+			this->current_token == Symbol::KwRead ||
+			this->current_token == Symbol::KwIf ||
+			this->current_token == Symbol::KwWhile ||
+			this->current_token == Symbol::KwRepeat ||
+			this->current_token == Symbol::KwFor ||
+			this->current_token == Symbol::KwBreak ||
+			this->current_token == Symbol::KwContinue)
 		{
-			statement();
+			statement_list();
 		}
 
 		expected_token(Symbol::KwEnd, "'end'");
