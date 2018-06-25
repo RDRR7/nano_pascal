@@ -1,7 +1,8 @@
-#ifndef _EXPR_PARSER_H
-#define _EXPR_PARSER_H
+#ifndef _NANOPASCAL_PARSER_H
+#define _NANOPASCAL_PARSER_H
 
 #include "nanopascal_lexer.h"
+#include "nanopascal_nodes.h"
 #include <string>
 
 class NanoPascalParser

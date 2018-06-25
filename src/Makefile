@@ -1,5 +1,5 @@
 TARGET=nanopascal
-C_SRCFILES=main.cpp nanopascal_lexer.cpp nanopascal_parser.cpp
+C_SRCFILES=main.cpp nanopascal_lexer.cpp nanopascal_parser.cpp nanopascal_nodes.cpp
 OBJ_FILES=${C_SRCFILES:.cpp=.o}
 .PHONY: clean run
 .SUFFIXES:
