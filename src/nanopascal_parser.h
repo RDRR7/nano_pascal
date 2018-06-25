@@ -37,12 +37,12 @@ class NanoPascalParser
 	std::list<std::string> id_list();
 	std::tuple<ReturnType, int, int> type();
 	std::tuple<ReturnType, int, int> array_type();
-	void subprogram_decl();
-	void subprogram_header();
-	void function_header();
-	void procedure_header();
-	void argument_decl_list();
-	void argument_decl();
+	UP_SubprogramDeclNode subprogram_decl();
+	std::tuple<std::string, ArgumentDeclList, ReturnType> subprogram_header();
+	std::tuple<std::string, ArgumentDeclList, ReturnType> function_header();
+	std::tuple<std::string, ArgumentDeclList, ReturnType> procedure_header();
+	ArgumentDeclList argument_decl_list();
+	UP_ArgumentDeclNode argument_decl();
 	void statement_list();
 	void statement();
 	void assign();

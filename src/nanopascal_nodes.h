@@ -141,6 +141,62 @@ class VariableDeclNode : public ASTNode
 				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Integer;";
 				break;
 			case ReturnType::Boolean:
+				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Boolean;";
+				break;
+			case ReturnType::Char:
+				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Char;";
+				break;
+			}
+		}
+
+		return s_id_list +
+			   ": " +
+			   s_type;
+	}
+};
+
+class ArgumentDeclNode : public ASTNode
+{
+  public:
+	ArgumentDeclNode(std::string id,
+					 ReturnType type,
+					 int index1,
+					 int index2) : id(id),
+								   type(type),
+								   index1(index1),
+								   index2(index2) {}
+
+	std::string id;
+	ReturnType type;
+	int index1;
+	int index2;
+
+	std::string to_string()
+	{
+		std::string s_type = "";
+		if (this->index1 == -1 && this->index2 == -1)
+		{
+			switch (this->type)
+			{
+			case ReturnType::Integer:
+				s_type = "Integer";
+				break;
+			case ReturnType::Boolean:
+				s_type = "Boolean";
+				break;
+			case ReturnType::Char:
+				s_type = "Char";
+				break;
+			}
+		}
+		else
+		{
+			switch (this->type)
+			{
+			case ReturnType::Integer:
+				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Integer";
+				break;
+			case ReturnType::Boolean:
 				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Boolean";
 				break;
 			case ReturnType::Char:
@@ -149,9 +205,71 @@ class VariableDeclNode : public ASTNode
 			}
 		}
 
-		return s_id_list +
-			   ": " +
-			   s_type;
+		return id + ": " + s_type;
+	}
+};
+
+class SubprogramDeclNode : public ASTNode
+{
+  public:
+	SubprogramDeclNode(std::string id,
+					   ArgumentDeclList argument_decl_list,
+					   ReturnType return_type,
+					   VariableDeclList variable_section,
+					   StatementList statement_list) : id(id),
+													   argument_decl_list(std::move(argument_decl_list)),
+													   return_type(return_type),
+													   variable_section(std::move(variable_section)),
+													   statement_list(std::move(statement_list)) {}
+
+	std::string id;
+	ArgumentDeclList argument_decl_list;
+	ReturnType return_type; // Missing array indexes
+
+	VariableDeclList variable_section;
+
+	StatementList statement_list;
+
+	std::string to_string()
+	{
+		std::string s_subprogram_type = "";
+		if (this->return_type == ReturnType::Non)
+		{
+			s_subprogram_type += "procedure ";
+		}
+		else
+		{
+			s_subprogram_type += "function ";
+		}
+
+		std::string s_type = "";
+
+		switch (this->return_type)
+		{
+		case ReturnType::Integer:
+			s_type = "Integer;";
+			break;
+		case ReturnType::Boolean:
+			s_type = "Boolean;";
+			break;
+		case ReturnType::Char:
+			s_type = "Char;";
+			break;
+		}
+
+		std::string s_argument_decl_list = "";
+		if (!this->argument_decl_list.empty())
+		{
+			s_argument_decl_list = this->argument_decl_list.front()->to_string();
+			this->argument_decl_list.pop_front();
+			for (auto &argument_decl : this->argument_decl_list)
+			{
+				s_argument_decl_list += "; " + argument_decl->to_string();
+			}
+		}
+
+		return s_subprogram_type + this->id + "(" + s_argument_decl_list + "): " + s_type + "\nbegin"
+																							"\nend;";
 	}
 };
 
@@ -179,59 +297,17 @@ class ProgramNode : public ASTNode
 			s_variable_section += "\n" + variable_decl->to_string();
 		}
 
+		std::string s_subprogram_decl = "";
+		for (auto &v_subprogram_decl : this->subprogram_decl)
+		{
+			s_subprogram_decl += "\n" + v_subprogram_decl->to_string();
+		}
+
 		return "program " + id + ";" +
 			   s_variable_section +
+			   s_subprogram_decl +
 			   "\nbegin"
 			   "\nend.";
-	}
-};
-
-class ArgumentDeclNode : public ASTNode
-{
-  public:
-	ArgumentDeclNode(std::string id,
-					 ReturnType type,
-					 int index1,
-					 int index2) : id(id),
-								   type(type),
-								   index1(index1),
-								   index2(index2) {}
-
-	std::string id;
-	ReturnType type;
-	int index1;
-	int index2;
-
-	std::string to_string()
-	{
-		return "argumentdecl";
-	}
-};
-
-class SubprogramDeclNode : public ASTNode
-{
-  public:
-	SubprogramDeclNode(std::string id,
-					   ArgumentDeclList argument_decl_list,
-					   ReturnType return_type,
-					   VariableDeclList variable_section,
-					   StatementList statement_list) : id(id),
-													   argument_decl_list(std::move(argument_decl_list)),
-													   return_type(return_type),
-													   variable_section(std::move(variable_section)),
-													   statement_list(std::move(statement_list)) {}
-
-	std::string id;
-	ArgumentDeclList argument_decl_list;
-	ReturnType return_type; // Missing array indexes
-
-	VariableDeclList variable_section;
-
-	StatementList statement_list;
-
-	std::string to_string()
-	{
-		return "subprogram";
 	}
 };
 
