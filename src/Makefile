@@ -8,7 +8,7 @@ $(TARGET): $(OBJ_FILES)
 	g++ -g -o $@ $(OBJ_FILES)
 
 %.o: %.cpp
-	g++ -std=c++11 -g -c -o $@ $<
+	g++ -std=c++14 -g -c -o $@ $<
 
 run: $(TARGET)
 	./$(TARGET) ../examples/gcd.pas

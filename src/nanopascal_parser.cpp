@@ -1,11 +1,12 @@
 #include "nanopascal_parser.h"
+#include <stdlib.h>
 
 void NanoPascalParser::parse()
 {
 	this->current_token = this->lexer.get_next_token();
-	program();
+	UP_ProgramNode o_program_node = program();
 	expected_token(Symbol::Eof, "'EOF'");
-	std::cout << "Parsed" << std::endl;
+	std::cout << o_program_node->to_string() << "\nParsed" << std::endl;
 }
 
 void NanoPascalParser::print_error(std::string expected)
@@ -18,21 +19,25 @@ void NanoPascalParser::print_error(std::string expected)
 			  << std::endl;
 }
 
-void NanoPascalParser::program()
+UP_ProgramNode NanoPascalParser::program()
 {
 	expected_token(Symbol::KwProgram, "'program'");
+
+	std::string id = this->lexer.get_lexeme();
 	expected_token(Symbol::ID, "'id'");
 	expected_token(Symbol::Semicolon, "';'");
 
+	VariableDeclList o_variable_section;
 	if (this->current_token == Symbol::KwVar)
 	{
-		variable_section();
+		o_variable_section = variable_section();
 	}
 
+	SubprogramDeclList o_subprogram_decl;
 	while (this->current_token == Symbol::KwFunction ||
 		   this->current_token == Symbol::KwProcedure)
 	{
-		subprogram_decl();
+		o_subprogram_decl.push_back(subprogram_decl());
 	}
 
 	expected_token(Symbol::KwBegin, "'begin'");
@@ -53,59 +58,95 @@ void NanoPascalParser::program()
 
 	expected_token(Symbol::KwEnd, "'end'");
 	expected_token(Symbol::Dot, "'.'");
+
+	StatementList o_statement_list;
+
+	return std::make_unique<ProgramNode>(id,
+										 std::move(o_variable_section),
+										 std::move(o_subprogram_decl),
+										 std::move(o_statement_list));
 }
 
-void NanoPascalParser::variable_section()
+VariableDeclList NanoPascalParser::variable_section()
 {
 	expected_token(Symbol::KwVar, "'var'");
+
+	VariableDeclList o_variable_section;
 	do
 	{
-		variable_decl();
+		o_variable_section.push_back(variable_decl());
 	} while (this->current_token == Symbol::ID);
+
+	return std::move(o_variable_section);
 }
 
-void NanoPascalParser::variable_decl()
+UP_VariableDeclNode NanoPascalParser::variable_decl()
 {
-	id_list();
+	std::list<std::string> o_id_list;
+	o_id_list = id_list();
 
 	expected_token(Symbol::Colon, "':'");
 
-	type();
+	std::tuple<ReturnType, int, int> o_type = type();
 
 	expected_token(Symbol::Semicolon, "';'");
+
+	return std::make_unique<VariableDeclNode>(std::move(o_id_list),
+											  std::get<0>(o_type),
+											  std::get<1>(o_type),
+											  std::get<2>(o_type));
 }
 
-void NanoPascalParser::id_list()
+std::list<std::string> NanoPascalParser::id_list()
 {
+	std::list<std::string> o_id_list;
+
+	o_id_list.push_back(this->lexer.get_lexeme());
 	expected_token(Symbol::ID, "'id'");
 
 	while (this->current_token == Symbol::Comma)
 	{
 		get_next_token();
+
+		o_id_list.push_back(this->lexer.get_lexeme());
 		expected_token(Symbol::ID, "'id'");
 	}
+
+	return std::move(o_id_list);
 }
 
-void NanoPascalParser::type()
+std::tuple<ReturnType, int, int> NanoPascalParser::type()
 {
 	if (this->current_token == Symbol::KwInteger ||
 		this->current_token == Symbol::KwBoolean ||
 		this->current_token == Symbol::KwChar)
 	{
-		get_next_token();
+		switch (this->current_token)
+		{
+		case Symbol::KwInteger:
+			get_next_token();
+			return std::make_tuple(ReturnType::Integer, -1, -1);
+		case Symbol::KwBoolean:
+			get_next_token();
+			return std::make_tuple(ReturnType::Boolean, -1, -1);
+		case Symbol::KwChar:
+			get_next_token();
+			return std::make_tuple(ReturnType::Char, -1, -1);
+		}
 	}
 	else if (this->current_token == Symbol::KwArray)
 	{
-		array_type();
+		return array_type();
 	}
 	else
 	{
 		print_error("'integer', 'boolean', 'char' or 'array'");
 		exit(1);
 	}
+	return std::make_tuple(ReturnType::Non, -1, -1);
 }
 
-void NanoPascalParser::array_type()
+std::tuple<ReturnType, int, int> NanoPascalParser::array_type()
 {
 	expected_token(Symbol::KwArray, "'array'");
 	expected_token(Symbol::OpenBra, "'['");
@@ -117,6 +158,21 @@ void NanoPascalParser::array_type()
 		print_error("int constant");
 		exit(1);
 	}
+
+	int index1 = -1;
+	switch (this->current_token)
+	{
+	case Symbol::IntConstantBin:
+		index1 = strtol(this->lexer.get_lexeme().c_str(), nullptr, 2);
+		break;
+	case Symbol::IntConstantDec:
+		index1 = strtol(this->lexer.get_lexeme().c_str(), nullptr, 10);
+		break;
+	case Symbol::IntConstantHex:
+		index1 = strtol(this->lexer.get_lexeme().c_str(), nullptr, 16);
+		break;
+	}
+
 	get_next_token();
 
 	expected_token(Symbol::DotDot, "'..'");
@@ -128,6 +184,21 @@ void NanoPascalParser::array_type()
 		print_error("int constant");
 		exit(1);
 	}
+
+	int index2 = -1;
+	switch (this->current_token)
+	{
+	case Symbol::IntConstantBin:
+		index2 = strtol(this->lexer.get_lexeme().c_str(), nullptr, 2);
+		break;
+	case Symbol::IntConstantDec:
+		index2 = strtol(this->lexer.get_lexeme().c_str(), nullptr, 10);
+		break;
+	case Symbol::IntConstantHex:
+		index2 = strtol(this->lexer.get_lexeme().c_str(), nullptr, 16);
+		break;
+	}
+
 	get_next_token();
 
 	expected_token(Symbol::CloseBra, "']'");
@@ -140,12 +211,25 @@ void NanoPascalParser::array_type()
 		print_error("'integer', 'boolean' or 'char'");
 		exit(1);
 	}
-	get_next_token();
+
+	switch (this->current_token)
+	{
+	case Symbol::KwInteger:
+		get_next_token();
+		return std::make_tuple(ReturnType::Integer, index1, index2);
+	case Symbol::KwBoolean:
+		get_next_token();
+		return std::make_tuple(ReturnType::Boolean, index1, index2);
+	case Symbol::KwChar:
+		get_next_token();
+		return std::make_tuple(ReturnType::Char, index1, index2);
+	}
+	return std::make_tuple(ReturnType::Non, -1, -1);
 }
 
-void NanoPascalParser::subprogram_decl()
+UP_SubprogramDeclNode NanoPascalParser::subprogram_decl()
 {
-	subprogram_header();
+	std::tuple<std::string, ArgumentDeclList, ReturnType> o_subprogram_header = subprogram_header();
 
 	if (this->current_token == Symbol::KwVar)
 	{
@@ -172,11 +256,11 @@ void NanoPascalParser::subprogram_decl()
 	expected_token(Symbol::Semicolon, "';'");
 }
 
-void NanoPascalParser::subprogram_header()
+std::tuple<std::string, ArgumentDeclList, ReturnType> NanoPascalParser::subprogram_header()
 {
 	if (this->current_token == Symbol::KwFunction)
 	{
-		function_header();
+		return function_header();
 	}
 	else if (this->current_token == Symbol::KwProcedure)
 	{
@@ -189,11 +273,14 @@ void NanoPascalParser::subprogram_header()
 	}
 }
 
-void NanoPascalParser::function_header()
+std::tuple<std::string, ArgumentDeclList, ReturnType> NanoPascalParser::function_header()
 {
 	expected_token(Symbol::KwFunction, "'function'");
+
+	std::string id = this->lexer.get_lexeme();
 	expected_token(Symbol::ID, "'id'");
 
+	ArgumentDeclList o_argument_decl_list;
 	if (this->current_token == Symbol::OpenPar)
 	{
 		get_next_token();
@@ -208,9 +295,11 @@ void NanoPascalParser::function_header()
 
 	expected_token(Symbol::Colon, "':'");
 
-	type();
+	std::tuple<ReturnType, int, int> o_type = type();
 
 	expected_token(Symbol::Semicolon, "';'");
+
+	return std::make_tuple(id, o_argument_decl_list, std::get<0>(o_type));
 }
 
 void NanoPascalParser::procedure_header()

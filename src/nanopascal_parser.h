@@ -4,6 +4,7 @@
 #include "nanopascal_lexer.h"
 #include "nanopascal_nodes.h"
 #include <string>
+#include <tuple>
 
 class NanoPascalParser
 {
@@ -30,15 +31,15 @@ class NanoPascalParser
 		get_next_token();
 	}
 
-	void program();
-	void variable_section();
-	void variable_decl();
-	void id_list();
-	void type();
-	void array_type();
-	void subprogram_decl();
-	void subprogram_header();
-	void function_header();
+	UP_ProgramNode program();
+	VariableDeclList variable_section();
+	UP_VariableDeclNode variable_decl();
+	std::list<std::string> id_list();
+	std::tuple<ReturnType, int, int> type();
+	std::tuple<ReturnType, int, int> array_type();
+	UP_SubprogramDeclNode subprogram_decl();
+	std::tuple<std::string, ArgumentDeclList, ReturnType> subprogram_header();
+	std::tuple<std::string, ArgumentDeclList, ReturnType> function_header();
 	void procedure_header();
 	void argument_decl_list();
 	void argument_decl();
