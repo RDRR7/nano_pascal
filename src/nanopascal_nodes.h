@@ -39,6 +39,7 @@ class BinaryExprNode;
 class NotExprNode;
 class UnaryExprNode;
 class NumberNode;
+class ParExprNode;
 
 using UP_ASTNode = std::unique_ptr<ASTNode>;
 using UP_ProgramNode = std::unique_ptr<ProgramNode>;
@@ -59,6 +60,7 @@ using UP_BinaryExprNode = std::unique_ptr<BinaryExprNode>;
 using UP_NotExprNode = std::unique_ptr<NotExprNode>;
 using UP_UnaryExprNode = std::unique_ptr<UnaryExprNode>;
 using UP_NumberNode = std::unique_ptr<NumberNode>;
+using UP_ParExprNode = std::unique_ptr<ParExprNode>;
 
 using SubprogramDeclList = std::list<UP_SubprogramDeclNode>;
 using StatementList = std::list<UP_StatementNode>;
@@ -187,15 +189,15 @@ class ProgramNode : public ASTNode
 class ArgumentDeclNode : public ASTNode
 {
   public:
-	ArgumentDeclNode(std::list<std::string> id_list,
+	ArgumentDeclNode(std::string id,
 					 ReturnType type,
 					 int index1,
-					 int index2) : id_list(id_list),
+					 int index2) : id(id),
 								   type(type),
 								   index1(index1),
 								   index2(index2) {}
 
-	std::list<std::string> id_list;
+	std::string id;
 	ReturnType type;
 	int index1;
 	int index2;
@@ -387,6 +389,11 @@ class NotExprNode : public ExprNode
 	NotExprNode(UP_ExprNode expr1) : expr1(std::move(expr1)) {}
 	UP_ExprNode expr1;
 
+	int get_precedence()
+	{
+		return 3;
+	}
+
 	std::string get_oper()
 	{
 		return "not";
@@ -403,6 +410,11 @@ class UnaryExprNode : public ExprNode
   public:
 	UnaryExprNode(UP_ExprNode expr1) : expr1(std::move(expr1)) {}
 	UP_ExprNode expr1;
+
+	int get_precedence()
+	{
+		return 3;
+	}
 
 	std::string get_oper()
 	{
@@ -450,6 +462,28 @@ DEFINE_BINARY_EXPR(LT, 0, "<");
 DEFINE_BINARY_EXPR(GT, 0, ">");
 DEFINE_BINARY_EXPR(LToE, 0, "<=");
 DEFINE_BINARY_EXPR(GToE, 0, ">=");
+
+class ParExprNode : public ExprNode
+{
+  public:
+	ParExprNode(UP_ExprNode expr1) : expr1(std::move(expr1)) {}
+	UP_ExprNode expr1;
+
+	std::string to_string()
+	{
+		return "parexpr";
+	}
+
+	int get_precedence()
+	{
+		return 4;
+	}
+
+	std::string get_oper()
+	{
+		return "(";
+	}
+};
 
 class NumberNode : public ASTNode
 {
