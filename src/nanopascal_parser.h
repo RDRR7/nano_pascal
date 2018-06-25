@@ -41,6 +41,7 @@ class NanoPascalParser
 	void procedure_header();
 	void argument_decl_list();
 	void argument_decl();
+	void statement_list();
 	void statement();
 	void assign();
 	void lvalue();
