@@ -209,6 +209,32 @@ class ArgumentDeclNode : public ASTNode
 	}
 };
 
+class StatementNode : public ASTNode
+{
+  public:
+	~StatementNode() {}
+};
+
+class SubprogramCallNode : public StatementNode
+{
+  public:
+	SubprogramCallNode(std::string id,
+					   ExprList expr_list,
+					   ArgumentList argument_list) : id(id),
+													 expr_list(std::move(expr_list)),
+													 argument_list(std::move(argument_list)) {}
+
+	std::string id;
+
+	ExprList expr_list;
+	ArgumentList argument_list;
+
+	std::string to_string()
+	{
+		return this->id + "();";
+	}
+};
+
 class SubprogramDeclNode : public ASTNode
 {
   public:
@@ -268,8 +294,16 @@ class SubprogramDeclNode : public ASTNode
 			}
 		}
 
-		return s_subprogram_type + this->id + "(" + s_argument_decl_list + "): " + s_type + "\nbegin"
-																							"\nend;";
+		std::string s_statement_list = "";
+		for (auto &statement : this->statement_list)
+		{
+			if (statement != nullptr)
+				s_statement_list += "\n" + statement->to_string();
+		}
+
+		return s_subprogram_type + this->id + "(" + s_argument_decl_list + "): " + s_type + "\nbegin" +
+			   s_statement_list +
+			   "\nend;";
 	}
 };
 
@@ -291,7 +325,11 @@ class ProgramNode : public ASTNode
 
 	std::string to_string()
 	{
-		std::string s_variable_section = "\nvar ";
+		std::string s_variable_section = "";
+		if (!this->variable_section.empty())
+		{
+			s_variable_section = "\nvar ";
+		}
 		for (auto &variable_decl : this->variable_section)
 		{
 			s_variable_section += "\n" + variable_decl->to_string();
@@ -303,18 +341,26 @@ class ProgramNode : public ASTNode
 			s_subprogram_decl += "\n" + v_subprogram_decl->to_string();
 		}
 
+		std::string s_statement_list = "";
+		for (auto &statement : this->statement_list)
+		{
+			if (statement != nullptr)
+			{
+				s_statement_list += "\n" + statement->to_string();
+			}
+			else
+			{
+				s_statement_list += "\nstatement";
+			}
+		}
+
 		return "program " + id + ";" +
 			   s_variable_section +
 			   s_subprogram_decl +
-			   "\nbegin"
+			   "\nbegin" +
+			   s_statement_list +
 			   "\nend.";
 	}
-};
-
-class StatementNode : public ASTNode
-{
-  public:
-	~StatementNode() {}
 };
 
 class AssignNode : public StatementNode
@@ -333,26 +379,6 @@ class AssignNode : public StatementNode
 	std::string to_string()
 	{
 		return "assign";
-	}
-};
-
-class SubprogramCallNode : public StatementNode
-{
-  public:
-	SubprogramCallNode(std::string id,
-					   ExprList expr_list,
-					   ArgumentList argument_list) : id(id),
-													 expr_list(std::move(expr_list)),
-													 argument_list(std::move(argument_list)) {}
-
-	std::string id;
-
-	ExprList expr_list;
-	ArgumentList argument_list;
-
-	std::string to_string()
-	{
-		return "subprogram call";
 	}
 };
 
@@ -382,7 +408,36 @@ class IfNode : public StatementNode
 
 	std::string to_string()
 	{
-		return "if";
+		std::string s_block_true = "";
+		for (auto &statement : this->block_true)
+		{
+			if (statement != nullptr)
+			{
+				s_block_true += "\n" + statement->to_string();
+			}
+			else
+			{
+				s_block_true += "\nstatement";
+			}
+		}
+
+		std::string s_block_false = "";
+		if (!block_false.empty())
+		{
+			s_block_false = "\nelse";
+			for (auto &statement : this->block_false)
+			{
+				if (statement != nullptr)
+				{
+					s_block_false += "\n" + statement->to_string();
+				}
+				else
+				{
+					s_block_false += "\nstatement";
+				}
+			}
+		}
+		return "if expr then" + s_block_true + s_block_false;
 	}
 };
 

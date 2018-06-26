@@ -43,8 +43,8 @@ class NanoPascalParser
 	std::tuple<std::string, ArgumentDeclList, ReturnType> procedure_header();
 	ArgumentDeclList argument_decl_list();
 	UP_ArgumentDeclNode argument_decl();
-	void statement_list();
-	void statement();
+	StatementList statement_list();
+	UP_StatementNode statement();
 	void assign();
 	void lvalue();
 	void expr();
@@ -52,12 +52,12 @@ class NanoPascalParser
 	void exprpse();
 	void exprpth();
 	void exprpla();
-	void subprogram_call();
+	UP_StatementNode subprogram_call();
 	void expr_list();
 	void argument_list();
 	void argument();
 	void constant();
-	void block();
+	StatementList block();
 };
 
 #endif

@@ -42,6 +42,7 @@ UP_ProgramNode NanoPascalParser::program()
 
 	expected_token(Symbol::KwBegin, "'begin'");
 
+	StatementList o_statement_list;
 	if (this->current_token == Symbol::ID ||
 		this->current_token == Symbol::KwWrite ||
 		this->current_token == Symbol::KwWriteln ||
@@ -53,13 +54,11 @@ UP_ProgramNode NanoPascalParser::program()
 		this->current_token == Symbol::KwBreak ||
 		this->current_token == Symbol::KwContinue)
 	{
-		statement_list();
+		o_statement_list = statement_list();
 	}
 
 	expected_token(Symbol::KwEnd, "'end'");
 	expected_token(Symbol::Dot, "'.'");
-
-	StatementList o_statement_list;
 
 	return std::make_unique<ProgramNode>(id,
 										 std::move(o_variable_section),
@@ -251,7 +250,7 @@ UP_SubprogramDeclNode NanoPascalParser::subprogram_decl()
 		this->current_token == Symbol::KwBreak ||
 		this->current_token == Symbol::KwContinue)
 	{
-		statement_list();
+		o_statement_list = statement_list();
 	}
 
 	expected_token(Symbol::KwEnd, "'end'");
@@ -382,9 +381,11 @@ UP_ArgumentDeclNode NanoPascalParser::argument_decl()
 											  std::get<2>(o_type));
 }
 
-void NanoPascalParser::statement_list()
+StatementList NanoPascalParser::statement_list()
 {
-	statement();
+	StatementList o_statement_list;
+
+	o_statement_list.push_back(statement());
 	while (this->current_token == Symbol::Semicolon)
 	{
 		get_next_token();
@@ -399,12 +400,14 @@ void NanoPascalParser::statement_list()
 			this->current_token == Symbol::KwBreak ||
 			this->current_token == Symbol::KwContinue)
 		{
-			statement();
+			o_statement_list.push_back(statement());
 		}
 	}
+
+	return o_statement_list;
 }
 
-void NanoPascalParser::statement()
+UP_StatementNode NanoPascalParser::statement()
 {
 	if (this->current_token == Symbol::ID)
 	{
@@ -452,7 +455,7 @@ void NanoPascalParser::statement()
 			 this->current_token == Symbol::KwWriteln ||
 			 this->current_token == Symbol::KwRead)
 	{
-		subprogram_call();
+		return subprogram_call();
 	}
 	else if (this->current_token == Symbol::KwIf)
 	{
@@ -461,13 +464,16 @@ void NanoPascalParser::statement()
 
 		expected_token(Symbol::KwThen, "'then'");
 
-		block();
+		StatementList o_statement_list1 = block();
 
+		StatementList o_statement_list2;
 		if (this->current_token == Symbol::KwElse)
 		{
 			get_next_token();
-			block();
+			o_statement_list2 = block();
 		}
+
+		return std::make_unique<IfNode>(nullptr, std::move(o_statement_list1), std::move(o_statement_list2));
 	}
 	else if (this->current_token == Symbol::KwWhile)
 	{
@@ -515,6 +521,8 @@ void NanoPascalParser::statement()
 		print_error("'id', 'write', 'writeln', 'read', 'if', 'while', 'repeat', 'for', 'break' or'continue'");
 		exit(1);
 	}
+
+	return nullptr;
 }
 
 void NanoPascalParser::assign()
@@ -678,7 +686,7 @@ void NanoPascalParser::exprpla()
 	}
 }
 
-void NanoPascalParser::subprogram_call()
+UP_StatementNode NanoPascalParser::subprogram_call() // check read
 {
 	// Id allready consumed by exprpla
 	if (this->current_token == Symbol::KwWrite)
@@ -690,7 +698,7 @@ void NanoPascalParser::subprogram_call()
 
 		expected_token(Symbol::ClosePar, "')'");
 	}
-	if (this->current_token == Symbol::KwWriteln)
+	else if (this->current_token == Symbol::KwWriteln)
 	{
 		get_next_token();
 
@@ -718,7 +726,13 @@ void NanoPascalParser::subprogram_call()
 
 			expected_token(Symbol::ClosePar, "')'");
 		}
+
+		ExprList o_expr_list;
+		ArgumentList o_argument_list;
+		return std::make_unique<SubprogramCallNode>("writeln", std::move(o_expr_list), std::move(o_argument_list));
 	}
+
+	return nullptr;
 }
 
 void NanoPascalParser::expr_list()
@@ -788,8 +802,9 @@ void NanoPascalParser::constant()
 	}
 }
 
-void NanoPascalParser::block()
+StatementList NanoPascalParser::block()
 {
+	StatementList o_statement_list;
 	if (this->current_token == Symbol::ID ||
 		this->current_token == Symbol::KwWrite ||
 		this->current_token == Symbol::KwWriteln ||
@@ -801,7 +816,7 @@ void NanoPascalParser::block()
 		this->current_token == Symbol::KwBreak ||
 		this->current_token == Symbol::KwContinue)
 	{
-		statement();
+		o_statement_list.push_back(statement());
 	}
 	else if (this->current_token == Symbol::KwBegin)
 	{
@@ -818,7 +833,7 @@ void NanoPascalParser::block()
 			this->current_token == Symbol::KwBreak ||
 			this->current_token == Symbol::KwContinue)
 		{
-			statement_list();
+			o_statement_list.merge(statement_list());
 		}
 
 		expected_token(Symbol::KwEnd, "'end'");
@@ -828,4 +843,6 @@ void NanoPascalParser::block()
 	{
 		print_error("'id', 'write', 'writeln', 'read', 'if', 'while', 'repeat', 'for', 'break', 'continue' or 'begin'");
 	}
+
+	return std::move(o_statement_list);
 }
