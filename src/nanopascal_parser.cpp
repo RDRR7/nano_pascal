@@ -686,7 +686,7 @@ void NanoPascalParser::exprpla()
 	}
 }
 
-UP_StatementNode NanoPascalParser::subprogram_call() // check read
+UP_StatementNode NanoPascalParser::subprogram_call()
 {
 	// Id allready consumed by exprpla
 	if (this->current_token == Symbol::KwWrite)
@@ -730,6 +730,20 @@ UP_StatementNode NanoPascalParser::subprogram_call() // check read
 		ExprList o_expr_list;
 		ArgumentList o_argument_list;
 		return std::make_unique<SubprogramCallNode>("writeln", std::move(o_expr_list), std::move(o_argument_list));
+	}
+	else if (this->current_token == Symbol::KwRead)
+	{
+		get_next_token();
+
+		expected_token(Symbol::OpenPar, "'('");
+
+		argument_list();
+
+		expected_token(Symbol::ClosePar, "')'");
+
+		ExprList o_expr_list;
+		ArgumentList o_argument_list;
+		return std::make_unique<SubprogramCallNode>("read", std::move(o_expr_list), std::move(o_argument_list));
 	}
 
 	return nullptr;
