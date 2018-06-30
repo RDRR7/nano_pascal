@@ -35,11 +35,12 @@ class WhileNode;
 class RepeatNode;
 class ForNode;
 class BranchingStatementNode;
-class BinaryExprNode;
 class NotExprNode;
 class UnaryExprNode;
-class NumberNode;
+class BinaryExprNode;
 class ParExprNode;
+class NumberNode;
+class StringNode;
 
 using UP_ASTNode = std::unique_ptr<ASTNode>;
 using UP_ProgramNode = std::unique_ptr<ProgramNode>;
@@ -56,11 +57,12 @@ using UP_WhileNode = std::unique_ptr<WhileNode>;
 using UP_RepeatNode = std::unique_ptr<RepeatNode>;
 using UP_ForNode = std::unique_ptr<ForNode>;
 using UP_BranchingStatementNode = std::unique_ptr<BranchingStatementNode>;
-using UP_BinaryExprNode = std::unique_ptr<BinaryExprNode>;
 using UP_NotExprNode = std::unique_ptr<NotExprNode>;
 using UP_UnaryExprNode = std::unique_ptr<UnaryExprNode>;
-using UP_NumberNode = std::unique_ptr<NumberNode>;
+using UP_BinaryExprNode = std::unique_ptr<BinaryExprNode>;
 using UP_ParExprNode = std::unique_ptr<ParExprNode>;
+using UP_NumberNode = std::unique_ptr<NumberNode>;
+using UP_StringNode = std::unique_ptr<StringNode>;
 
 using SubprogramDeclList = std::list<UP_SubprogramDeclNode>;
 using StatementList = std::list<UP_StatementNode>;
@@ -92,147 +94,23 @@ class ASTNode
 	virtual std::string to_string() = 0;
 };
 
-class VariableDeclNode : public ASTNode
+class ProgramNode : public ASTNode
 {
   public:
-	VariableDeclNode(std::list<std::string> id_list,
-					 ReturnType type,
-					 int index1,
-					 int index2) : id_list(id_list),
-								   type(type),
-								   index1(index1),
-								   index2(index2) {}
-
-	std::list<std::string> id_list;
-	ReturnType type;
-	int index1;
-	int index2;
-
-	std::string to_string()
-	{
-		std::string s_id_list = this->id_list.front();
-		this->id_list.pop_front();
-		for (auto id : this->id_list)
-		{
-			s_id_list += ", " + id;
-		}
-
-		std::string s_type = "";
-		if (this->index1 == -1 && this->index2 == -1)
-		{
-			switch (this->type)
-			{
-			case ReturnType::Integer:
-				s_type = "Integer;";
-				break;
-			case ReturnType::Boolean:
-				s_type = "Boolean;";
-				break;
-			case ReturnType::Char:
-				s_type = "Char;";
-				break;
-			}
-		}
-		else
-		{
-			switch (this->type)
-			{
-			case ReturnType::Integer:
-				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Integer;";
-				break;
-			case ReturnType::Boolean:
-				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Boolean;";
-				break;
-			case ReturnType::Char:
-				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Char;";
-				break;
-			}
-		}
-
-		return s_id_list +
-			   ": " +
-			   s_type;
-	}
-};
-
-class ArgumentDeclNode : public ASTNode
-{
-  public:
-	ArgumentDeclNode(std::string id,
-					 ReturnType type,
-					 int index1,
-					 int index2) : id(id),
-								   type(type),
-								   index1(index1),
-								   index2(index2) {}
+	ProgramNode(std::string id,
+				VariableDeclList variable_section,
+				SubprogramDeclList subprogram_decl,
+				StatementList statement_list) : id(id),
+												variable_section(std::move(variable_section)),
+												subprogram_decl(std::move(subprogram_decl)),
+												statement_list(std::move(statement_list)) {}
 
 	std::string id;
-	ReturnType type;
-	int index1;
-	int index2;
+	VariableDeclList variable_section;
+	SubprogramDeclList subprogram_decl;
+	StatementList statement_list;
 
-	std::string to_string()
-	{
-		std::string s_type = "";
-		if (this->index1 == -1 && this->index2 == -1)
-		{
-			switch (this->type)
-			{
-			case ReturnType::Integer:
-				s_type = "Integer";
-				break;
-			case ReturnType::Boolean:
-				s_type = "Boolean";
-				break;
-			case ReturnType::Char:
-				s_type = "Char";
-				break;
-			}
-		}
-		else
-		{
-			switch (this->type)
-			{
-			case ReturnType::Integer:
-				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Integer";
-				break;
-			case ReturnType::Boolean:
-				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Boolean";
-				break;
-			case ReturnType::Char:
-				s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Char";
-				break;
-			}
-		}
-
-		return id + ": " + s_type;
-	}
-};
-
-class StatementNode : public ASTNode
-{
-  public:
-	~StatementNode() {}
-};
-
-class SubprogramCallNode : public StatementNode
-{
-  public:
-	SubprogramCallNode(std::string id,
-					   ExprList expr_list,
-					   ArgumentList argument_list) : id(id),
-													 expr_list(std::move(expr_list)),
-													 argument_list(std::move(argument_list)) {}
-
-	std::string id;
-
-	ExprList expr_list;
-	ArgumentList argument_list;
-
-	std::string to_string()
-	{
-		return this->id + "();";
-	}
+	std::string to_string() override;
 };
 
 class SubprogramDeclNode : public ASTNode
@@ -256,111 +134,51 @@ class SubprogramDeclNode : public ASTNode
 
 	StatementList statement_list;
 
-	std::string to_string()
-	{
-		std::string s_subprogram_type = "";
-		if (this->return_type == ReturnType::Non)
-		{
-			s_subprogram_type += "procedure ";
-		}
-		else
-		{
-			s_subprogram_type += "function ";
-		}
-
-		std::string s_type = "";
-
-		switch (this->return_type)
-		{
-		case ReturnType::Integer:
-			s_type = "Integer;";
-			break;
-		case ReturnType::Boolean:
-			s_type = "Boolean;";
-			break;
-		case ReturnType::Char:
-			s_type = "Char;";
-			break;
-		}
-
-		std::string s_argument_decl_list = "";
-		if (!this->argument_decl_list.empty())
-		{
-			s_argument_decl_list = this->argument_decl_list.front()->to_string();
-			this->argument_decl_list.pop_front();
-			for (auto &argument_decl : this->argument_decl_list)
-			{
-				s_argument_decl_list += "; " + argument_decl->to_string();
-			}
-		}
-
-		std::string s_statement_list = "";
-		for (auto &statement : this->statement_list)
-		{
-			if (statement != nullptr)
-				s_statement_list += "\n" + statement->to_string();
-		}
-
-		return s_subprogram_type + this->id + "(" + s_argument_decl_list + "): " + s_type + "\nbegin" +
-			   s_statement_list +
-			   "\nend;";
-	}
+	std::string to_string() override;
 };
 
-class ProgramNode : public ASTNode
+class StatementNode : public ASTNode
 {
   public:
-	ProgramNode(std::string id,
-				VariableDeclList variable_section,
-				SubprogramDeclList subprogram_decl,
-				StatementList statement_list) : id(id),
-												variable_section(std::move(variable_section)),
-												subprogram_decl(std::move(subprogram_decl)),
-												statement_list(std::move(statement_list)) {}
+	~StatementNode() {}
+};
+
+class VariableDeclNode : public ASTNode
+{
+  public:
+	VariableDeclNode(std::list<std::string> id_list,
+					 ReturnType type,
+					 int index1,
+					 int index2) : id_list(id_list),
+								   type(type),
+								   index1(index1),
+								   index2(index2) {}
+
+	std::list<std::string> id_list;
+	ReturnType type;
+	int index1;
+	int index2;
+
+	std::string to_string() override;
+};
+
+class ArgumentDeclNode : public ASTNode
+{
+  public:
+	ArgumentDeclNode(std::string id,
+					 ReturnType type,
+					 int index1,
+					 int index2) : id(id),
+								   type(type),
+								   index1(index1),
+								   index2(index2) {}
 
 	std::string id;
-	VariableDeclList variable_section;
-	SubprogramDeclList subprogram_decl;
-	StatementList statement_list;
+	ReturnType type;
+	int index1;
+	int index2;
 
-	std::string to_string()
-	{
-		std::string s_variable_section = "";
-		if (!this->variable_section.empty())
-		{
-			s_variable_section = "\nvar ";
-		}
-		for (auto &variable_decl : this->variable_section)
-		{
-			s_variable_section += "\n" + variable_decl->to_string();
-		}
-
-		std::string s_subprogram_decl = "";
-		for (auto &v_subprogram_decl : this->subprogram_decl)
-		{
-			s_subprogram_decl += "\n" + v_subprogram_decl->to_string();
-		}
-
-		std::string s_statement_list = "";
-		for (auto &statement : this->statement_list)
-		{
-			if (statement != nullptr)
-			{
-				s_statement_list += "\n" + statement->to_string();
-			}
-			else
-			{
-				s_statement_list += "\nstatement";
-			}
-		}
-
-		return "program " + id + ";" +
-			   s_variable_section +
-			   s_subprogram_decl +
-			   "\nbegin" +
-			   s_statement_list +
-			   "\nend.";
-	}
+	std::string to_string() override;
 };
 
 class AssignNode : public StatementNode
@@ -376,10 +194,33 @@ class AssignNode : public StatementNode
 
 	UP_ExprNode expr;
 
-	std::string to_string()
-	{
-		return "assign";
-	}
+	std::string to_string() override;
+};
+
+class ExprNode : public ASTNode
+{
+  public:
+	~ExprNode() {}
+
+	virtual int get_precedence() = 0;
+	virtual std::string get_oper() = 0;
+};
+
+class SubprogramCallNode : public StatementNode
+{
+  public:
+	SubprogramCallNode(std::string id,
+					   ExprList expr_list,
+					   ArgumentList argument_list) : id(id),
+													 expr_list(std::move(expr_list)),
+													 argument_list(std::move(argument_list)) {}
+
+	std::string id;
+
+	ExprList expr_list;
+	ArgumentList argument_list;
+
+	std::string to_string() override;
 };
 
 class ArgumentNode : public ASTNode
@@ -406,39 +247,7 @@ class IfNode : public StatementNode
 	StatementList block_true;
 	StatementList block_false;
 
-	std::string to_string()
-	{
-		std::string s_block_true = "";
-		for (auto &statement : this->block_true)
-		{
-			if (statement != nullptr)
-			{
-				s_block_true += "\n" + statement->to_string();
-			}
-			else
-			{
-				s_block_true += "\nstatement";
-			}
-		}
-
-		std::string s_block_false = "";
-		if (!block_false.empty())
-		{
-			s_block_false = "\nelse";
-			for (auto &statement : this->block_false)
-			{
-				if (statement != nullptr)
-				{
-					s_block_false += "\n" + statement->to_string();
-				}
-				else
-				{
-					s_block_false += "\nstatement";
-				}
-			}
-		}
-		return "if expr then" + s_block_true + s_block_false;
-	}
+	std::string to_string() override;
 };
 
 class WhileNode : public StatementNode
@@ -451,10 +260,7 @@ class WhileNode : public StatementNode
 	UP_ExprNode expr;
 	StatementList block;
 
-	std::string to_string()
-	{
-		return "while";
-	}
+	std::string to_string() override;
 };
 
 class RepeatNode : public StatementNode
@@ -467,10 +273,7 @@ class RepeatNode : public StatementNode
 	StatementList block;
 	UP_ExprNode expr;
 
-	std::string to_string()
-	{
-		return "repeat";
-	}
+	std::string to_string() override;
 };
 
 class ForNode : public StatementNode
@@ -486,10 +289,7 @@ class ForNode : public StatementNode
 	UP_ExprNode expr;
 	StatementList block;
 
-	std::string to_string()
-	{
-		return "for";
-	}
+	std::string to_string() override;
 };
 
 class BranchingStatementNode : public StatementNode
@@ -499,19 +299,7 @@ class BranchingStatementNode : public StatementNode
 
 	BranchingStatement branching_statement;
 
-	std::string to_string()
-	{
-		return "branching";
-	}
-};
-
-class ExprNode : public ASTNode
-{
-  public:
-	~ExprNode() {}
-
-	virtual int get_precedence() = 0;
-	virtual std::string get_oper() = 0;
+	std::string to_string() override;
 };
 
 class NotExprNode : public ExprNode
@@ -530,10 +318,7 @@ class NotExprNode : public ExprNode
 		return "not";
 	}
 
-	std::string to_string()
-	{
-		return "not";
-	}
+	std::string to_string() override;
 };
 
 class UnaryExprNode : public ExprNode
@@ -552,10 +337,7 @@ class UnaryExprNode : public ExprNode
 		return "-";
 	}
 
-	std::string to_string()
-	{
-		return "-";
-	}
+	std::string to_string() override;
 };
 
 class BinaryExprNode : public ExprNode
@@ -567,10 +349,7 @@ class BinaryExprNode : public ExprNode
 	UP_ExprNode expr1;
 	UP_ExprNode expr2;
 
-	std::string to_string()
-	{
-		return "binary";
-	}
+	std::string to_string() override;
 };
 
 DEFINE_BINARY_EXPR(Mul, 2, "*");
@@ -600,11 +379,6 @@ class ParExprNode : public ExprNode
 	ParExprNode(UP_ExprNode expr1) : expr1(std::move(expr1)) {}
 	UP_ExprNode expr1;
 
-	std::string to_string()
-	{
-		return "parexpr";
-	}
-
 	int get_precedence()
 	{
 		return 4;
@@ -614,6 +388,8 @@ class ParExprNode : public ExprNode
 	{
 		return "(";
 	}
+
+	std::string to_string() override;
 };
 
 class NumberNode : public ASTNode
@@ -622,10 +398,7 @@ class NumberNode : public ASTNode
 
 	int val;
 
-	std::string to_string()
-	{
-		return "number";
-	}
+	std::string to_string() override;
 };
 
 class StringNode : public ASTNode
@@ -634,10 +407,7 @@ class StringNode : public ASTNode
 
 	std::string val;
 
-	std::string to_string()
-	{
-		return "string";
-	}
+	std::string to_string() override;
 };
 
 #endif
