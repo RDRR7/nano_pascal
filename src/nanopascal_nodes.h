@@ -5,19 +5,19 @@
 #include <string>
 #include <list>
 
-#define DEFINE_BINARY_EXPR(name, prec, oper)                                                                         \
-	class name##ExprNode : public BinaryExprNode                                                                     \
-	{                                                                                                                \
-	  public:                                                                                                        \
-		name##ExprNode(UP_ExprNode expr1, UP_ExprNode expr2) : BinaryExprNode(std::move(expr1), std::move(expr2)) {} \
-		int get_precedence()                                                                                         \
-		{                                                                                                            \
-			return prec;                                                                                             \
-		}                                                                                                            \
-		std::string get_oper()                                                                                       \
-		{                                                                                                            \
-			return oper;                                                                                             \
-		}                                                                                                            \
+#define DEFINE_BINARY_EXPR(name, prec, oper)                                                                       \
+	class name##ExprNode : public BinaryExprNode                                                                   \
+	{                                                                                                              \
+	  public:                                                                                                      \
+		name##ExprNode(UP_ASTNode expr1, UP_ASTNode expr2) : BinaryExprNode(std::move(expr1), std::move(expr2)) {} \
+		int get_precedence()                                                                                       \
+		{                                                                                                          \
+			return prec;                                                                                           \
+		}                                                                                                          \
+		std::string get_oper()                                                                                     \
+		{                                                                                                          \
+			return oper;                                                                                           \
+		}                                                                                                          \
 	}
 
 class ASTNode;
@@ -41,6 +41,7 @@ class BinaryExprNode;
 class ParExprNode;
 class NumberNode;
 class StringNode;
+class BooleanNode;
 
 using UP_ASTNode = std::unique_ptr<ASTNode>;
 using UP_ProgramNode = std::unique_ptr<ProgramNode>;
@@ -63,7 +64,9 @@ using UP_BinaryExprNode = std::unique_ptr<BinaryExprNode>;
 using UP_ParExprNode = std::unique_ptr<ParExprNode>;
 using UP_NumberNode = std::unique_ptr<NumberNode>;
 using UP_StringNode = std::unique_ptr<StringNode>;
+using UP_BooleanNode = std::unique_ptr<BooleanNode>;
 
+using ASTNodelList = std::list<UP_ASTNode>;
 using SubprogramDeclList = std::list<UP_SubprogramDeclNode>;
 using StatementList = std::list<UP_StatementNode>;
 using VariableDeclList = std::list<UP_VariableDeclNode>;
@@ -210,15 +213,12 @@ class SubprogramCallNode : public StatementNode
 {
   public:
 	SubprogramCallNode(std::string id,
-					   ExprList expr_list,
-					   ArgumentList argument_list) : id(id),
-													 expr_list(std::move(expr_list)),
-													 argument_list(std::move(argument_list)) {}
+					   ASTNodelList ast_node_list) : id(id),
+													 ast_node_list(std::move(ast_node_list)) {}
 
 	std::string id;
 
-	ExprList expr_list;
-	ArgumentList argument_list;
+	ASTNodelList ast_node_list;
 
 	std::string to_string() override;
 };
@@ -343,11 +343,11 @@ class UnaryExprNode : public ExprNode
 class BinaryExprNode : public ExprNode
 {
   public:
-	BinaryExprNode(UP_ExprNode expr1,
-				   UP_ExprNode expr2) : expr1(std::move(expr1)),
-										expr2(std::move(expr2)) {}
-	UP_ExprNode expr1;
-	UP_ExprNode expr2;
+	BinaryExprNode(UP_ASTNode expr1,
+				   UP_ASTNode expr2) : expr1(std::move(expr1)),
+									   expr2(std::move(expr2)) {}
+	UP_ASTNode expr1;
+	UP_ASTNode expr2;
 
 	std::string to_string() override;
 };
@@ -376,8 +376,8 @@ DEFINE_BINARY_EXPR(GToE, 0, ">=");
 class ParExprNode : public ExprNode
 {
   public:
-	ParExprNode(UP_ExprNode expr1) : expr1(std::move(expr1)) {}
-	UP_ExprNode expr1;
+	ParExprNode(UP_ASTNode expr1) : expr1(std::move(expr1)) {}
+	UP_ASTNode expr1;
 
 	int get_precedence()
 	{
@@ -394,6 +394,7 @@ class ParExprNode : public ExprNode
 
 class NumberNode : public ASTNode
 {
+  public:
 	NumberNode(int val) : val(val) {}
 
 	int val;
@@ -403,7 +404,18 @@ class NumberNode : public ASTNode
 
 class StringNode : public ASTNode
 {
+  public:
 	StringNode(std::string val) : val(val) {}
+
+	std::string val;
+
+	std::string to_string() override;
+};
+
+class BooleanNode : public ASTNode
+{
+  public:
+	BooleanNode(std::string val) : val(val) {}
 
 	std::string val;
 

@@ -47,16 +47,16 @@ class NanoPascalParser
 	UP_StatementNode statement();
 	void assign();
 	void lvalue();
-	void expr();
-	void exprpfi();
-	void exprpse();
-	void exprpth();
-	void exprpla();
+	UP_ASTNode expr();
+	UP_ASTNode exprpfi();
+	UP_ASTNode exprpse();
+	UP_ASTNode exprpth();
+	UP_ASTNode exprpla();
 	UP_StatementNode subprogram_call();
 	void expr_list();
-	void argument_list();
-	void argument();
-	void constant();
+	ASTNodelList argument_list();
+	UP_ASTNode argument();
+	UP_ASTNode constant();
 	StatementList block();
 };
 

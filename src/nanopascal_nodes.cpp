@@ -179,7 +179,18 @@ std::string AssignNode::to_string()
 
 std::string SubprogramCallNode::to_string()
 {
-	return this->id + "();";
+	std::string s_ast_node_list = "";
+	if (!this->ast_node_list.empty())
+	{
+		s_ast_node_list = this->ast_node_list.front()->to_string();
+		this->ast_node_list.pop_front();
+		for (auto &ast_node : this->ast_node_list)
+		{
+			s_ast_node_list += ", " + ast_node->to_string();
+		}
+	}
+
+	return this->id + "(" + s_ast_node_list + ");";
 }
 
 std::string IfNode::to_string()
@@ -258,10 +269,15 @@ std::string ParExprNode::to_string()
 
 std::string NumberNode::to_string()
 {
-	return "number";
+	return std::to_string(val);
 }
 
 std::string StringNode::to_string()
 {
-	return "string";
+	return "'" + val + "'";
+}
+
+std::string BooleanNode::to_string()
+{
+	return val;
 }

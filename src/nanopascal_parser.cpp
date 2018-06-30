@@ -545,7 +545,7 @@ void NanoPascalParser::lvalue()
 	}
 }
 
-void NanoPascalParser::expr()
+UP_ASTNode NanoPascalParser::expr()
 {
 	if (this->current_token == Symbol::OpenPar ||
 		this->current_token == Symbol::IntConstantBin ||
@@ -561,18 +561,19 @@ void NanoPascalParser::expr()
 		this->current_token == Symbol::KwNot ||
 		this->current_token == Symbol::OpSub)
 	{
-		exprpfi();
+		return exprpfi();
 	}
 	else
 	{
 		print_error("'(', 'int constant', 'char constant', 'true', 'false', 'id', 'write', 'writeln', 'read', 'not' or '-'");
 		exit(1);
 	}
+	return nullptr;
 }
 
-void NanoPascalParser::exprpfi()
+UP_ASTNode NanoPascalParser::exprpfi()
 {
-	exprpse();
+	UP_ASTNode expr1 = exprpse();
 	while (this->current_token == Symbol::OpEqual ||
 		   this->current_token == Symbol::OpNotEqual ||
 		   this->current_token == Symbol::OpLessThan ||
@@ -580,27 +581,71 @@ void NanoPascalParser::exprpfi()
 		   this->current_token == Symbol::OpLessThanOrEqual ||
 		   this->current_token == Symbol::OpGreaterThanOrEqual)
 	{
+		Symbol last_token = this->current_token;
 		get_next_token();
-		exprpse();
+
+		UP_ASTNode expr2 = exprpse();
+		switch (last_token)
+		{
+		case Symbol::OpEqual:
+			expr1 = std::make_unique<EqExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::OpNotEqual:
+			expr1 = std::make_unique<NEqExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::OpLessThan:
+			expr1 = std::make_unique<LTExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::OpGreaterThan:
+			expr1 = std::make_unique<GTExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::OpLessThanOrEqual:
+			expr1 = std::make_unique<LToEExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::OpGreaterThanOrEqual:
+			expr1 = std::make_unique<GToEExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		}
 	}
+
+	return std::move(expr1);
 }
 
-void NanoPascalParser::exprpse()
+UP_ASTNode NanoPascalParser::exprpse()
 {
-	exprpth();
+	UP_ASTNode expr1 = exprpth();
 	while (this->current_token == Symbol::OpAdd ||
 		   this->current_token == Symbol::OpSub ||
 		   this->current_token == Symbol::KwOr ||
 		   this->current_token == Symbol::KwXor)
 	{
+		Symbol last_token = this->current_token;
 		get_next_token();
-		exprpth();
+
+		UP_ASTNode expr2 = exprpth();
+		switch (last_token)
+		{
+		case Symbol::OpAdd:
+			expr1 = std::make_unique<AddExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::OpSub:
+			expr1 = std::make_unique<SubExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::KwOr:
+			expr1 = std::make_unique<OrExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::KwXor:
+			expr1 = std::make_unique<XorExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		}
 	}
+
+	return std::move(expr1);
 }
 
-void NanoPascalParser::exprpth()
+UP_ASTNode NanoPascalParser::exprpth()
 {
-	exprpla();
+	UP_ASTNode expr1 = exprpla();
 	while (this->current_token == Symbol::OpMul ||
 		   this->current_token == Symbol::KwDiv ||
 		   this->current_token == Symbol::KwMod ||
@@ -610,19 +655,51 @@ void NanoPascalParser::exprpth()
 		   this->current_token == Symbol::OpLeftShift ||
 		   this->current_token == Symbol::OpRightShift)
 	{
+		Symbol last_token = this->current_token;
 		get_next_token();
-		exprpla();
+
+		UP_ASTNode expr2 = exprpla();
+		switch (last_token)
+		{
+		case Symbol::OpMul:
+			expr1 = std::make_unique<MulExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::KwDiv:
+			expr1 = std::make_unique<DivExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::KwMod:
+			expr1 = std::make_unique<ModExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::KwAnd:
+			expr1 = std::make_unique<AndExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::KwShl:
+			expr1 = std::make_unique<ShlExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::KwShr:
+			expr1 = std::make_unique<ShrExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::OpLeftShift:
+			expr1 = std::make_unique<LSExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		case Symbol::OpRightShift:
+			expr1 = std::make_unique<RSExprNode>(std::move(expr1), std::move(expr2));
+			break;
+		}
 	}
+
+	return std::move(expr1);
 }
 
-void NanoPascalParser::exprpla()
+UP_ASTNode NanoPascalParser::exprpla()
 {
 	if (this->current_token == Symbol::OpenPar)
 	{
 		get_next_token();
-		exprpfi();
+		UP_ASTNode expr1 = exprpfi();
 
 		expected_token(Symbol::ClosePar, "')'");
+		return std::make_unique<ParExprNode>(std::move(expr1));
 	}
 	else if (this->current_token == Symbol::IntConstantBin ||
 			 this->current_token == Symbol::IntConstantDec ||
@@ -631,13 +708,13 @@ void NanoPascalParser::exprpla()
 			 this->current_token == Symbol::KwTrue ||
 			 this->current_token == Symbol::KwFalse)
 	{
-		constant();
+		return constant();
 	}
 	else if (this->current_token == Symbol::KwWrite ||
 			 this->current_token == Symbol::KwWriteln ||
 			 this->current_token == Symbol::KwRead)
 	{
-		subprogram_call();
+		return subprogram_call();
 	}
 	else if (this->current_token == Symbol::ID) // lvalue and subprogram-call for id
 	{
@@ -684,6 +761,8 @@ void NanoPascalParser::exprpla()
 		print_error("'(', 'int constant', 'char constant', 'true', 'false', 'id', 'write', 'writeln', 'read', 'not' or '-'");
 		exit(1);
 	}
+
+	return nullptr;
 }
 
 UP_StatementNode NanoPascalParser::subprogram_call()
@@ -697,11 +776,15 @@ UP_StatementNode NanoPascalParser::subprogram_call()
 		argument_list();
 
 		expected_token(Symbol::ClosePar, "')'");
+
+		ASTNodelList ast_node_list;
+		return std::make_unique<SubprogramCallNode>("write", std::move(ast_node_list));
 	}
 	else if (this->current_token == Symbol::KwWriteln)
 	{
 		get_next_token();
 
+		ASTNodelList ast_node_list;
 		if (this->current_token == Symbol::OpenPar)
 		{
 			get_next_token();
@@ -721,15 +804,13 @@ UP_StatementNode NanoPascalParser::subprogram_call()
 				this->current_token == Symbol::KwNot ||
 				this->current_token == Symbol::OpSub)
 			{
-				argument_list();
+				ast_node_list = argument_list();
 			}
 
 			expected_token(Symbol::ClosePar, "')'");
 		}
 
-		ExprList o_expr_list;
-		ArgumentList o_argument_list;
-		return std::make_unique<SubprogramCallNode>("writeln", std::move(o_expr_list), std::move(o_argument_list));
+		return std::make_unique<SubprogramCallNode>("writeln", std::move(ast_node_list));
 	}
 	else if (this->current_token == Symbol::KwRead)
 	{
@@ -741,9 +822,8 @@ UP_StatementNode NanoPascalParser::subprogram_call()
 
 		expected_token(Symbol::ClosePar, "')'");
 
-		ExprList o_expr_list;
-		ArgumentList o_argument_list;
-		return std::make_unique<SubprogramCallNode>("read", std::move(o_expr_list), std::move(o_argument_list));
+		ASTNodelList ast_node_list;
+		return std::make_unique<SubprogramCallNode>("read", std::move(ast_node_list));
 	}
 
 	return nullptr;
@@ -759,21 +839,28 @@ void NanoPascalParser::expr_list()
 	}
 }
 
-void NanoPascalParser::argument_list()
+ASTNodelList NanoPascalParser::argument_list()
 {
-	argument();
+	ASTNodelList ast_node_list;
+
+	ast_node_list.push_back(argument());
 	while (this->current_token == Symbol::Comma)
 	{
 		get_next_token();
-		argument();
+		ast_node_list.push_back(argument());
 	}
+
+	return ast_node_list;
 }
 
-void NanoPascalParser::argument()
+UP_ASTNode NanoPascalParser::argument()
 {
 	if (this->current_token == Symbol::StringConstant)
 	{
+		std::string string_constant = this->lexer.get_lexeme();
 		get_next_token();
+
+		return std::make_unique<StringNode>(string_constant);
 	}
 	else if (this->current_token == Symbol::OpenPar ||
 			 this->current_token == Symbol::IntConstantBin ||
@@ -789,16 +876,18 @@ void NanoPascalParser::argument()
 			 this->current_token == Symbol::KwNot ||
 			 this->current_token == Symbol::OpSub)
 	{
-		expr();
+		return expr();
 	}
 	else
 	{
 		print_error("'string constant', (', 'int constant', 'char constant', 'true', 'false', 'id', 'write', 'writeln', 'read', 'not' or '-'");
 		exit(1);
 	}
+
+	return nullptr;
 }
 
-void NanoPascalParser::constant()
+UP_ASTNode NanoPascalParser::constant()
 {
 	if (this->current_token == Symbol::IntConstantBin ||
 		this->current_token == Symbol::IntConstantDec ||
@@ -807,13 +896,41 @@ void NanoPascalParser::constant()
 		this->current_token == Symbol::KwTrue ||
 		this->current_token == Symbol::KwFalse)
 	{
+		Symbol last_token = this->current_token;
+		std::string s_constant = this->lexer.get_lexeme();
 		get_next_token();
+
+		int number;
+		switch (last_token)
+		{
+		case Symbol::IntConstantBin:
+			number = strtol(s_constant.c_str(), nullptr, 2);
+			return std::make_unique<NumberNode>(number);
+			break;
+		case Symbol::IntConstantDec:
+			number = strtol(s_constant.c_str(), nullptr, 10);
+			return std::make_unique<NumberNode>(number);
+			break;
+		case Symbol::IntConstantHex:
+			number = strtol(s_constant.c_str(), nullptr, 16);
+			return std::make_unique<NumberNode>(number);
+			break;
+		case Symbol::CharConstant:
+			return std::make_unique<StringNode>(s_constant);
+		case Symbol::KwTrue:
+		case Symbol::KwFalse:
+			return std::make_unique<BooleanNode>(s_constant);
+		}
+
+		return nullptr;
 	}
 	else
 	{
 		print_error("'int constant', 'char constant', 'true' or 'false'");
 		exit(1);
 	}
+
+	return nullptr;
 }
 
 StatementList NanoPascalParser::block()
