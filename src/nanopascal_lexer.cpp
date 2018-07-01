@@ -125,7 +125,13 @@ bool NanoPascalLexer::is_directive_defined(std::string directive)
 
 void NanoPascalLexer::print_error(std::string error)
 {
-	std::cerr << "lexer:" << this->line_number << ":" << this->column_number << ": " << error << std::endl;
+	std::cerr << "lexer:"
+			  << this->line_number
+			  << ":"
+			  << this->column_number
+			  << ": "
+			  << error
+			  << std::endl;
 }
 
 Symbol NanoPascalLexer::get_next_token()

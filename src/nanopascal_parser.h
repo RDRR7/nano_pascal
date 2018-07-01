@@ -1,8 +1,10 @@
-#ifndef _EXPR_PARSER_H
-#define _EXPR_PARSER_H
+#ifndef _NANOPASCAL_PARSER_H
+#define _NANOPASCAL_PARSER_H
 
 #include "nanopascal_lexer.h"
+#include "nanopascal_nodes.h"
 #include <string>
+#include <tuple>
 
 class NanoPascalParser
 {
@@ -29,33 +31,31 @@ class NanoPascalParser
 		get_next_token();
 	}
 
-	void program();
-	void variable_section();
-	void variable_decl();
-	void id_list();
-	void type();
-	void array_type();
-	void subprogram_decl();
-	void subprogram_header();
-	void function_header();
-	void procedure_header();
-	void argument_decl_list();
-	void argument_decl();
-	void statement_list();
-	void statement();
-	void assign();
-	void lvalue();
-	void expr();
-	void exprpfi();
-	void exprpse();
-	void exprpth();
-	void exprpla();
-	void subprogram_call();
-	void expr_list();
-	void argument_list();
-	void argument();
-	void constant();
-	void block();
+	UP_ProgramNode program();
+	VariableDeclList variable_section();
+	UP_VariableDeclNode variable_decl();
+	std::list<std::string> id_list();
+	std::tuple<ReturnType, int, int> type();
+	std::tuple<ReturnType, int, int> array_type();
+	UP_SubprogramDeclNode subprogram_decl();
+	std::tuple<std::string, ArgumentDeclList, ReturnType, int, int> subprogram_header();
+	std::tuple<std::string, ArgumentDeclList, ReturnType, int, int> function_header();
+	std::tuple<std::string, ArgumentDeclList, ReturnType, int, int> procedure_header();
+	ArgumentDeclList argument_decl_list();
+	UP_ArgumentDeclNode argument_decl();
+	StatementList statement_list();
+	UP_StatementNode statement();
+	UP_ASTNode expr();
+	UP_ASTNode exprpfi();
+	UP_ASTNode exprpse();
+	UP_ASTNode exprpth();
+	UP_ASTNode exprpla();
+	UP_StatementNode subprogram_call();
+	ASTNodelList expr_list();
+	ASTNodelList argument_list();
+	UP_ASTNode argument();
+	UP_ASTNode constant();
+	StatementList block();
 };
 
 #endif
