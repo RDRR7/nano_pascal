@@ -48,18 +48,49 @@ std::string SubprogramDeclNode::to_string()
 	}
 
 	std::string s_type = "";
-
-	switch (this->return_type)
+	if (this->index1 == -1 && this->index2 == -1)
 	{
-	case ReturnType::Integer:
-		s_type = "Integer;";
-		break;
-	case ReturnType::Boolean:
-		s_type = "Boolean;";
-		break;
-	case ReturnType::Char:
-		s_type = "Char;";
-		break;
+		switch (this->return_type)
+		{
+		case ReturnType::Integer:
+			s_type = ": Integer;";
+			break;
+		case ReturnType::Boolean:
+			s_type = ": Boolean;";
+			break;
+		case ReturnType::Char:
+			s_type = ": Char;";
+			break;
+		default:
+			s_type = "; ";
+		}
+	}
+	else
+	{
+		switch (this->return_type)
+		{
+		case ReturnType::Integer:
+			s_type = ": Array [" +
+					 std::to_string(index1) +
+					 ".." +
+					 std::to_string(index2) +
+					 "] of Integer;";
+			break;
+		case ReturnType::Boolean:
+			s_type = ": Array [" +
+					 std::to_string(index1) +
+					 ".." +
+					 std::to_string(index2) +
+					 "] of Boolean;";
+			break;
+		case ReturnType::Char:
+			s_type = ": Array [" +
+					 std::to_string(index1) +
+					 ".." +
+					 std::to_string(index2) +
+					 "] of Char;";
+			break;
+		}
 	}
 
 	std::string s_argument_decl_list = "";
@@ -81,7 +112,8 @@ std::string SubprogramDeclNode::to_string()
 			s_statement_list += "\n" + statement->to_string();
 	}
 
-	return s_subprogram_type + this->id + "(" + s_argument_decl_list + "): " + s_type + "\nbegin" +
+	return s_subprogram_type +
+		   this->id + "(" + s_argument_decl_list + ")" + s_type + "\nbegin" +
 		   s_statement_list +
 		   "\nend;";
 }
@@ -120,20 +152,30 @@ std::string VariableDeclNode::to_string()
 		switch (this->type)
 		{
 		case ReturnType::Integer:
-			s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Integer;";
+			s_type = "Array [" +
+					 std::to_string(index1) +
+					 ".." +
+					 std::to_string(index2) +
+					 "] of Integer;";
 			break;
 		case ReturnType::Boolean:
-			s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Boolean;";
+			s_type = "Array [" +
+					 std::to_string(index1) +
+					 ".." +
+					 std::to_string(index2) +
+					 "] of Boolean;";
 			break;
 		case ReturnType::Char:
-			s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Char;";
+			s_type = "Array [" +
+					 std::to_string(index1) +
+					 ".." +
+					 std::to_string(index2) +
+					 "] of Char;";
 			break;
 		}
 	}
 
-	return s_id_list +
-		   ": " +
-		   s_type;
+	return s_id_list + ": " + s_type;
 }
 
 std::string ArgumentDeclNode::to_string()
@@ -159,13 +201,25 @@ std::string ArgumentDeclNode::to_string()
 		switch (this->type)
 		{
 		case ReturnType::Integer:
-			s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Integer";
+			s_type = "Array [" +
+					 std::to_string(index1) +
+					 ".." +
+					 std::to_string(index2) +
+					 "] of Integer";
 			break;
 		case ReturnType::Boolean:
-			s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Boolean";
+			s_type = "Array [" +
+					 std::to_string(index1) +
+					 ".." +
+					 std::to_string(index2) +
+					 "] of Boolean";
 			break;
 		case ReturnType::Char:
-			s_type = "Array [" + std::to_string(index1) + ".." + std::to_string(index2) + "] of Char";
+			s_type = "Array [" +
+					 std::to_string(index1) +
+					 ".." +
+					 std::to_string(index2) +
+					 "] of Char";
 			break;
 		}
 	}
@@ -175,7 +229,13 @@ std::string ArgumentDeclNode::to_string()
 
 std::string AssignNode::to_string()
 {
-	return this->id + (this->index != nullptr ? "[" + this->index->to_string() + "]" : "") + " := " + this->expr->to_string();
+	return this->id +
+		   (this->index != nullptr ? "[" +
+										 this->index->to_string() +
+										 "]"
+								   : "") +
+		   " := " +
+		   this->expr->to_string();
 }
 
 std::string SubprogramCallNode::to_string()
@@ -260,7 +320,13 @@ std::string ForNode::to_string()
 		}
 	}
 
-	return "for " + this->assign->to_string() + " to " + this->expr->to_string() + " do\nbegin" + s_block + "\nend";
+	return "for " +
+		   this->assign->to_string() +
+		   " to " +
+		   this->expr->to_string() +
+		   " do\nbegin" +
+		   s_block +
+		   "\nend";
 }
 
 std::string BranchingStatementNode::to_string()

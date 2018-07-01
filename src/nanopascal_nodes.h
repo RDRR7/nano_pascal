@@ -5,19 +5,20 @@
 #include <string>
 #include <list>
 
-#define DEFINE_BINARY_EXPR(name, prec, oper)                                                                       \
-	class name##ExprNode : public BinaryExprNode                                                                   \
-	{                                                                                                              \
-	  public:                                                                                                      \
-		name##ExprNode(UP_ASTNode expr1, UP_ASTNode expr2) : BinaryExprNode(std::move(expr1), std::move(expr2)) {} \
-		int get_precedence()                                                                                       \
-		{                                                                                                          \
-			return prec;                                                                                           \
-		}                                                                                                          \
-		std::string get_oper()                                                                                     \
-		{                                                                                                          \
-			return oper;                                                                                           \
-		}                                                                                                          \
+#define DEFINE_BINARY_EXPR(name, prec, oper)                        \
+	class name##ExprNode : public BinaryExprNode                    \
+	{                                                               \
+	  public:                                                       \
+		name##ExprNode(UP_ASTNode expr1, UP_ASTNode expr2)          \
+			: BinaryExprNode(std::move(expr1), std::move(expr2)) {} \
+		int get_precedence()                                        \
+		{                                                           \
+			return prec;                                            \
+		}                                                           \
+		std::string get_oper()                                      \
+		{                                                           \
+			return oper;                                            \
+		}                                                           \
 	}
 
 class ASTNode;
@@ -123,16 +124,22 @@ class SubprogramDeclNode : public ASTNode
 	SubprogramDeclNode(std::string id,
 					   ArgumentDeclList argument_decl_list,
 					   ReturnType return_type,
+					   int index1,
+					   int index2,
 					   VariableDeclList variable_section,
 					   StatementList statement_list) : id(id),
 													   argument_decl_list(std::move(argument_decl_list)),
 													   return_type(return_type),
+													   index1(index1),
+													   index2(index2),
 													   variable_section(std::move(variable_section)),
 													   statement_list(std::move(statement_list)) {}
 
 	std::string id;
 	ArgumentDeclList argument_decl_list;
-	ReturnType return_type; // Missing array indexes
+	ReturnType return_type;
+	int index1;
+	int index2;
 
 	VariableDeclList variable_section;
 
@@ -295,7 +302,8 @@ class ForNode : public StatementNode
 class BranchingStatementNode : public StatementNode
 {
   public:
-	BranchingStatementNode(BranchingStatement branching_statement) : branching_statement(branching_statement) {}
+	BranchingStatementNode(BranchingStatement branching_statement)
+		: branching_statement(branching_statement) {}
 
 	BranchingStatement branching_statement;
 
