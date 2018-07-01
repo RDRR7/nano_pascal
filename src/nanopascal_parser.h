@@ -31,33 +31,31 @@ class NanoPascalParser
 		get_next_token();
 	}
 
-	UP_ProgramNode program();
-	VariableDeclList variable_section();
-	UP_VariableDeclNode variable_decl();
-	std::list<std::string> id_list();
-	std::tuple<ReturnType, int, int> type();
-	std::tuple<ReturnType, int, int> array_type();
-	UP_SubprogramDeclNode subprogram_decl();
-	std::tuple<std::string, ArgumentDeclList, ReturnType> subprogram_header();
-	std::tuple<std::string, ArgumentDeclList, ReturnType> function_header();
-	std::tuple<std::string, ArgumentDeclList, ReturnType> procedure_header();
-	ArgumentDeclList argument_decl_list();
-	UP_ArgumentDeclNode argument_decl();
-	StatementList statement_list();
-	UP_StatementNode statement();
-	void assign();
-	void lvalue();
-	UP_ASTNode expr();
-	UP_ASTNode exprpfi();
-	UP_ASTNode exprpse();
-	UP_ASTNode exprpth();
-	UP_ASTNode exprpla();
-	UP_StatementNode subprogram_call();
-	void expr_list();
-	ASTNodelList argument_list();
-	UP_ASTNode argument();
-	UP_ASTNode constant();
-	StatementList block();
+	UP_ProgramNode program();												   // Done
+	VariableDeclList variable_section();									   // Done
+	UP_VariableDeclNode variable_decl();									   // Done
+	std::list<std::string> id_list();										   // Done
+	std::tuple<ReturnType, int, int> type();								   // Done
+	std::tuple<ReturnType, int, int> array_type();							   // Done
+	UP_SubprogramDeclNode subprogram_decl();								   // Done
+	std::tuple<std::string, ArgumentDeclList, ReturnType> subprogram_header(); // Done
+	std::tuple<std::string, ArgumentDeclList, ReturnType> function_header();   // Done
+	std::tuple<std::string, ArgumentDeclList, ReturnType> procedure_header();  // Done
+	ArgumentDeclList argument_decl_list();									   // Done
+	UP_ArgumentDeclNode argument_decl();									   // Done
+	StatementList statement_list();											   // Done
+	UP_StatementNode statement();											   // Done
+	UP_ASTNode expr();														   // Done
+	UP_ASTNode exprpfi();													   // Done
+	UP_ASTNode exprpse();													   // Done
+	UP_ASTNode exprpth();													   // Done
+	UP_ASTNode exprpla();													   //TO DO
+	UP_StatementNode subprogram_call();										   // Done
+	ASTNodelList expr_list();												   // Done
+	ASTNodelList argument_list();											   // Done
+	UP_ASTNode argument();													   // Done
+	UP_ASTNode constant();													   // Done
+	StatementList block();													   // Done
 };
 
 #endif

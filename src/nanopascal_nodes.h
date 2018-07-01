@@ -38,10 +38,10 @@ class BranchingStatementNode;
 class NotExprNode;
 class UnaryExprNode;
 class BinaryExprNode;
-class ParExprNode;
 class NumberNode;
 class StringNode;
 class BooleanNode;
+class IdNode;
 
 using UP_ASTNode = std::unique_ptr<ASTNode>;
 using UP_ProgramNode = std::unique_ptr<ProgramNode>;
@@ -61,10 +61,10 @@ using UP_BranchingStatementNode = std::unique_ptr<BranchingStatementNode>;
 using UP_NotExprNode = std::unique_ptr<NotExprNode>;
 using UP_UnaryExprNode = std::unique_ptr<UnaryExprNode>;
 using UP_BinaryExprNode = std::unique_ptr<BinaryExprNode>;
-using UP_ParExprNode = std::unique_ptr<ParExprNode>;
 using UP_NumberNode = std::unique_ptr<NumberNode>;
 using UP_StringNode = std::unique_ptr<StringNode>;
 using UP_BooleanNode = std::unique_ptr<BooleanNode>;
+using UP_IdNode = std::unique_ptr<IdNode>;
 
 using ASTNodelList = std::list<UP_ASTNode>;
 using SubprogramDeclList = std::list<UP_SubprogramDeclNode>;
@@ -94,6 +94,7 @@ class ASTNode
 	ASTNode() {}
 	virtual ~ASTNode() {}
 
+	int get_precedence() { return 10; };
 	virtual std::string to_string() = 0;
 };
 
@@ -188,14 +189,14 @@ class AssignNode : public StatementNode
 {
   public:
 	AssignNode(std::string id,
-			   UP_ExprNode index,
-			   UP_ExprNode expr) : id(id),
-								   index(std::move(index)),
-								   expr(std::move(expr)) {}
+			   UP_ASTNode index,
+			   UP_ASTNode expr) : id(id),
+								  index(std::move(index)),
+								  expr(std::move(expr)) {}
 	std::string id;
-	UP_ExprNode index;
+	UP_ASTNode index;
 
-	UP_ExprNode expr;
+	UP_ASTNode expr;
 
 	std::string to_string() override;
 };
@@ -205,7 +206,6 @@ class ExprNode : public ASTNode
   public:
 	~ExprNode() {}
 
-	virtual int get_precedence() = 0;
 	virtual std::string get_oper() = 0;
 };
 
@@ -237,13 +237,13 @@ class ArgumentNode : public ASTNode
 class IfNode : public StatementNode
 {
   public:
-	IfNode(UP_ExprNode expr,
+	IfNode(UP_ASTNode expr,
 		   StatementList block_true,
 		   StatementList block_false) : expr(std::move(expr)),
 										block_true(std::move(block_true)),
 										block_false(std::move(block_false)) {}
 
-	UP_ExprNode expr;
+	UP_ASTNode expr;
 	StatementList block_true;
 	StatementList block_false;
 
@@ -253,11 +253,11 @@ class IfNode : public StatementNode
 class WhileNode : public StatementNode
 {
   public:
-	WhileNode(UP_ExprNode expr,
+	WhileNode(UP_ASTNode expr,
 			  StatementList block) : expr(std::move(expr)),
 									 block(std::move(block)) {}
 
-	UP_ExprNode expr;
+	UP_ASTNode expr;
 	StatementList block;
 
 	std::string to_string() override;
@@ -267,11 +267,11 @@ class RepeatNode : public StatementNode
 {
   public:
 	RepeatNode(StatementList block,
-			   UP_ExprNode expr) : block(std::move(block)),
-								   expr(std::move(expr)) {}
+			   UP_ASTNode expr) : block(std::move(block)),
+								  expr(std::move(expr)) {}
 
 	StatementList block;
-	UP_ExprNode expr;
+	UP_ASTNode expr;
 
 	std::string to_string() override;
 };
@@ -280,13 +280,13 @@ class ForNode : public StatementNode
 {
   public:
 	ForNode(UP_AssignNode assign,
-			UP_ExprNode expr,
+			UP_ASTNode expr,
 			StatementList block) : assign(std::move(assign)),
 								   expr(std::move(expr)),
 								   block(std::move(block)) {}
 
 	UP_AssignNode assign;
-	UP_ExprNode expr;
+	UP_ASTNode expr;
 	StatementList block;
 
 	std::string to_string() override;
@@ -305,8 +305,8 @@ class BranchingStatementNode : public StatementNode
 class NotExprNode : public ExprNode
 {
   public:
-	NotExprNode(UP_ExprNode expr1) : expr1(std::move(expr1)) {}
-	UP_ExprNode expr1;
+	NotExprNode(UP_ASTNode expr1) : expr1(std::move(expr1)) {}
+	UP_ASTNode expr1;
 
 	int get_precedence()
 	{
@@ -324,8 +324,8 @@ class NotExprNode : public ExprNode
 class UnaryExprNode : public ExprNode
 {
   public:
-	UnaryExprNode(UP_ExprNode expr1) : expr1(std::move(expr1)) {}
-	UP_ExprNode expr1;
+	UnaryExprNode(UP_ASTNode expr1) : expr1(std::move(expr1)) {}
+	UP_ASTNode expr1;
 
 	int get_precedence()
 	{
@@ -373,51 +373,59 @@ DEFINE_BINARY_EXPR(GT, 0, ">");
 DEFINE_BINARY_EXPR(LToE, 0, "<=");
 DEFINE_BINARY_EXPR(GToE, 0, ">=");
 
-class ParExprNode : public ExprNode
-{
-  public:
-	ParExprNode(UP_ASTNode expr1) : expr1(std::move(expr1)) {}
-	UP_ASTNode expr1;
-
-	int get_precedence()
-	{
-		return 4;
-	}
-
-	std::string get_oper()
-	{
-		return "(";
-	}
-
-	std::string to_string() override;
-};
-
-class NumberNode : public ASTNode
+class NumberNode : public ExprNode
 {
   public:
 	NumberNode(int val) : val(val) {}
 
 	int val;
 
+	std::string get_oper()
+	{
+		return "";
+	}
+
 	std::string to_string() override;
 };
 
-class StringNode : public ASTNode
+class StringNode : public ExprNode
 {
   public:
 	StringNode(std::string val) : val(val) {}
 
 	std::string val;
 
+	std::string get_oper()
+	{
+		return "";
+	}
+
 	std::string to_string() override;
 };
 
-class BooleanNode : public ASTNode
+class BooleanNode : public ExprNode
 {
   public:
 	BooleanNode(std::string val) : val(val) {}
 
 	std::string val;
+
+	std::string get_oper()
+	{
+		return "";
+	}
+
+	std::string to_string() override;
+};
+
+class IdNode : public StringNode
+{
+  public:
+	IdNode(std::string id,
+		   UP_ASTNode index) : StringNode(id),
+							   index(std::move(index)) {}
+
+	UP_ASTNode index;
 
 	std::string to_string() override;
 };

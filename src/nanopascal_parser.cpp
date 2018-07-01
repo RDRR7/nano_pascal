@@ -411,26 +411,33 @@ UP_StatementNode NanoPascalParser::statement()
 {
 	if (this->current_token == Symbol::ID)
 	{
+		std::string id = this->lexer.get_lexeme();
 		get_next_token();
 
+		ASTNodelList ast_node_list;
 		if (this->current_token == Symbol::Assign) // assign
 		{
 			get_next_token();
-			expr();
+			UP_ASTNode expr1 = expr();
+
+			return std::make_unique<AssignNode>(id, nullptr, std::move(expr1));
 		}
 		else if (this->current_token == Symbol::OpenBra)
 		{
 			get_next_token();
-			expr();
+			UP_ASTNode index = expr();
 
 			expected_token(Symbol::CloseBra, "']'");
 			expected_token(Symbol::Assign, "':='");
 
-			expr();
+			UP_ASTNode expr1 = expr();
+
+			return std::make_unique<AssignNode>(id, std::move(index), std::move(expr1));
 		}
 		else if (this->current_token == Symbol::OpenPar) // subprogram_call
 		{
 			get_next_token();
+
 			if (this->current_token == Symbol::OpenPar ||
 				this->current_token == Symbol::IntConstantBin ||
 				this->current_token == Symbol::IntConstantDec ||
@@ -445,11 +452,13 @@ UP_StatementNode NanoPascalParser::statement()
 				this->current_token == Symbol::KwNot ||
 				this->current_token == Symbol::OpSub)
 			{
-				expr_list();
+				ast_node_list = expr_list();
 			}
 
 			expected_token(Symbol::ClosePar, "')'");
 		}
+
+		return std::make_unique<SubprogramCallNode>(id, std::move(ast_node_list));
 	}
 	else if (this->current_token == Symbol::KwWrite ||
 			 this->current_token == Symbol::KwWriteln ||
@@ -460,7 +469,7 @@ UP_StatementNode NanoPascalParser::statement()
 	else if (this->current_token == Symbol::KwIf)
 	{
 		get_next_token();
-		expr();
+		UP_ASTNode o_expr = expr();
 
 		expected_token(Symbol::KwThen, "'then'");
 
@@ -473,48 +482,74 @@ UP_StatementNode NanoPascalParser::statement()
 			o_statement_list2 = block();
 		}
 
-		return std::make_unique<IfNode>(nullptr, std::move(o_statement_list1), std::move(o_statement_list2));
+		return std::make_unique<IfNode>(std::move(o_expr), std::move(o_statement_list1), std::move(o_statement_list2));
 	}
 	else if (this->current_token == Symbol::KwWhile)
 	{
 		get_next_token();
-		expr();
+		UP_ASTNode o_expr = expr();
 
 		expected_token(Symbol::KwDo, "'do'");
 
-		block();
+		StatementList o_statement_list = block();
+
+		return std::make_unique<WhileNode>(std::move(o_expr), std::move(o_statement_list));
 	}
 	else if (this->current_token == Symbol::KwRepeat)
 	{
 		get_next_token();
-		block();
+		StatementList o_statement_list = block();
 
 		expected_token(Symbol::KwUntil, "'until'");
 
-		expr();
+		UP_ASTNode o_expr = expr();
 
 		expected_token(Symbol::Semicolon, "';'");
+
+		return std::make_unique<RepeatNode>(std::move(o_statement_list), std::move(o_expr));
 	}
 	else if (this->current_token == Symbol::KwFor)
 	{
 		get_next_token();
-		assign();
+
+		std::string id = this->lexer.get_lexeme();
+		expected_token(Symbol::ID, "'id'");
+
+		UP_ASTNode index;
+		if (this->current_token == Symbol::OpenBra)
+		{
+			get_next_token();
+			index = expr();
+
+			expected_token(Symbol::CloseBra, "']'");
+		}
+
+		expected_token(Symbol::Assign, "':='");
+		UP_ASTNode expr1 = expr();
+
+		UP_AssignNode assign_node = std::make_unique<AssignNode>(id, std::move(index), std::move(expr1));
 
 		expected_token(Symbol::KwTo, "'to'");
 
-		expr();
+		UP_ASTNode expr2 = expr();
 
 		expected_token(Symbol::KwDo, "'do'");
 
-		block();
+		StatementList o_statement_list = block();
+
+		return std::make_unique<ForNode>(std::move(assign_node), std::move(expr2), std::move(o_statement_list));
 	}
 	else if (this->current_token == Symbol::KwBreak)
 	{
 		get_next_token();
+
+		return std::make_unique<BranchingStatementNode>(BranchingStatement::Break);
 	}
 	else if (this->current_token == Symbol::KwContinue)
 	{
 		get_next_token();
+
+		return std::make_unique<BranchingStatementNode>(BranchingStatement::Continue);
 	}
 	else
 	{
@@ -523,26 +558,6 @@ UP_StatementNode NanoPascalParser::statement()
 	}
 
 	return nullptr;
-}
-
-void NanoPascalParser::assign()
-{
-	lvalue();
-	expected_token(Symbol::Assign, "':='");
-	expr();
-}
-
-void NanoPascalParser::lvalue()
-{
-	expected_token(Symbol::ID, "'id'");
-
-	if (this->current_token == Symbol::OpenBra)
-	{
-		get_next_token();
-		expr();
-
-		expected_token(Symbol::CloseBra, "']'");
-	}
 }
 
 UP_ASTNode NanoPascalParser::expr()
@@ -568,6 +583,7 @@ UP_ASTNode NanoPascalParser::expr()
 		print_error("'(', 'int constant', 'char constant', 'true', 'false', 'id', 'write', 'writeln', 'read', 'not' or '-'");
 		exit(1);
 	}
+
 	return nullptr;
 }
 
@@ -699,7 +715,7 @@ UP_ASTNode NanoPascalParser::exprpla()
 		UP_ASTNode expr1 = exprpfi();
 
 		expected_token(Symbol::ClosePar, "')'");
-		return std::make_unique<ParExprNode>(std::move(expr1));
+		return std::move(expr1);
 	}
 	else if (this->current_token == Symbol::IntConstantBin ||
 			 this->current_token == Symbol::IntConstantDec ||
@@ -718,18 +734,22 @@ UP_ASTNode NanoPascalParser::exprpla()
 	}
 	else if (this->current_token == Symbol::ID) // lvalue and subprogram-call for id
 	{
+		std::string id = this->lexer.get_lexeme();
 		get_next_token();
 
+		UP_ASTNode expr1;
 		if (this->current_token == Symbol::OpenBra)
 		{
 			get_next_token();
-			expr();
+			expr1 = expr();
 
 			expected_token(Symbol::CloseBra, "']'");
 		}
 		else if (this->current_token == Symbol::OpenPar)
 		{
 			get_next_token();
+
+			ASTNodelList ast_node_list;
 			if (this->current_token == Symbol::OpenPar ||
 				this->current_token == Symbol::IntConstantBin ||
 				this->current_token == Symbol::IntConstantDec ||
@@ -744,17 +764,31 @@ UP_ASTNode NanoPascalParser::exprpla()
 				this->current_token == Symbol::KwNot ||
 				this->current_token == Symbol::OpSub)
 			{
-				expr_list();
+				ast_node_list = expr_list();
 			}
 
 			expected_token(Symbol::ClosePar, "')'");
+			return std::make_unique<SubprogramCallNode>(id, std::move(ast_node_list));
 		}
+
+		return std::make_unique<IdNode>(id, std::move(expr1));
 	}
 	else if (this->current_token == Symbol::KwNot ||
 			 this->current_token == Symbol::OpSub)
 	{
+		Symbol last_token = this->current_token;
+
 		get_next_token();
-		expr();
+
+		UP_ASTNode expr1 = expr();
+
+		switch (last_token)
+		{
+		case Symbol::KwNot:
+			return std::make_unique<NotExprNode>(std::move(expr1));
+		case Symbol::OpSub:
+			return std::make_unique<UnaryExprNode>(std::move(expr1));
+		}
 	}
 	else
 	{
@@ -773,11 +807,11 @@ UP_StatementNode NanoPascalParser::subprogram_call()
 		get_next_token();
 		expected_token(Symbol::OpenPar, "'('");
 
-		argument_list();
+		ASTNodelList ast_node_list;
+		ast_node_list = argument_list();
 
 		expected_token(Symbol::ClosePar, "')'");
 
-		ASTNodelList ast_node_list;
 		return std::make_unique<SubprogramCallNode>("write", std::move(ast_node_list));
 	}
 	else if (this->current_token == Symbol::KwWriteln)
@@ -818,25 +852,29 @@ UP_StatementNode NanoPascalParser::subprogram_call()
 
 		expected_token(Symbol::OpenPar, "'('");
 
-		argument_list();
+		ASTNodelList ast_node_list;
+		ast_node_list = argument_list();
 
 		expected_token(Symbol::ClosePar, "')'");
 
-		ASTNodelList ast_node_list;
 		return std::make_unique<SubprogramCallNode>("read", std::move(ast_node_list));
 	}
 
 	return nullptr;
 }
 
-void NanoPascalParser::expr_list()
+ASTNodelList NanoPascalParser::expr_list()
 {
-	expr();
+	ASTNodelList ast_node_list;
+
+	ast_node_list.push_back(expr());
 	while (this->current_token == Symbol::Comma)
 	{
 		get_next_token();
-		expr();
+		ast_node_list.push_back(expr());
 	}
+
+	return std::move(ast_node_list);
 }
 
 ASTNodelList NanoPascalParser::argument_list()
@@ -921,8 +959,6 @@ UP_ASTNode NanoPascalParser::constant()
 		case Symbol::KwFalse:
 			return std::make_unique<BooleanNode>(s_constant);
 		}
-
-		return nullptr;
 	}
 	else
 	{
