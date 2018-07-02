@@ -4,21 +4,27 @@
 #include <memory>
 #include <string>
 #include <list>
+#include <iostream>
+#include <map>
+#include <iomanip>
 
-#define DEFINE_BINARY_EXPR(name, prec, oper)                        \
-	class name##ExprNode : public BinaryExprNode                    \
-	{                                                               \
-	  public:                                                       \
-		name##ExprNode(UP_ASTNode expr1, UP_ASTNode expr2)          \
-			: BinaryExprNode(std::move(expr1), std::move(expr2)) {} \
-		int get_precedence()                                        \
-		{                                                           \
-			return prec;                                            \
-		}                                                           \
-		std::string get_oper()                                      \
-		{                                                           \
-			return oper;                                            \
-		}                                                           \
+#define DEFINE_BINARY_EXPR(name, prec, oper)                                        \
+	class name##ExprNode : public BinaryExprNode                                    \
+	{                                                                               \
+	  public:                                                                       \
+		name##ExprNode(UP_ASTNode expr1, UP_ASTNode expr2)                          \
+			: BinaryExprNode(std::move(expr1), std::move(expr2)) {}                 \
+		int get_precedence()                                                        \
+		{                                                                           \
+			return prec;                                                            \
+		}                                                                           \
+		std::string get_oper()                                                      \
+		{                                                                           \
+			return oper;                                                            \
+		}                                                                           \
+		int eval(std::map<std::string, ReturnType> &variables_type,                 \
+				 std::map<std::string, std::map<int, int>> &variables_value,        \
+				 std::map<std::string, UP_SubprogramDeclNode> &functions) override; \
 	}
 
 class ASTNode;
@@ -89,6 +95,16 @@ enum class BranchingStatement : unsigned int
 	Break = 1,
 };
 
+enum class NodeKind : unsigned int
+{
+	AST = 0,
+	StringNode = 1,
+	IdNode = 2,
+	ExprNode = 3,
+	SubprogramCallNode = 4,
+	BranchingStatementNode = 5,
+};
+
 class ASTNode
 {
   public:
@@ -96,7 +112,14 @@ class ASTNode
 	virtual ~ASTNode() {}
 
 	int get_precedence() { return 10; };
+	virtual NodeKind get_kind() { return NodeKind::AST; };
 	virtual std::string to_string() = 0;
+	virtual void exec(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+	{
+		std::cout << "Not implemented" << std::endl;
+	}
 };
 
 class ProgramNode : public ASTNode
@@ -116,6 +139,9 @@ class ProgramNode : public ASTNode
 	StatementList statement_list;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class SubprogramDeclNode : public ASTNode
@@ -146,6 +172,9 @@ class SubprogramDeclNode : public ASTNode
 	StatementList statement_list;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class StatementNode : public ASTNode
@@ -171,6 +200,9 @@ class VariableDeclNode : public ASTNode
 	int index2;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class ArgumentDeclNode : public ASTNode
@@ -206,6 +238,9 @@ class AssignNode : public StatementNode
 	UP_ASTNode expr;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class ExprNode : public ASTNode
@@ -214,6 +249,13 @@ class ExprNode : public ASTNode
 	~ExprNode() {}
 
 	virtual std::string get_oper() = 0;
+	virtual int eval(std::map<std::string, ReturnType> &variables_type,
+					 std::map<std::string, std::map<int, int>> &variables_value,
+					 std::map<std::string, UP_SubprogramDeclNode> &functions) = 0;
+	virtual NodeKind get_kind()
+	{
+		return NodeKind::ExprNode;
+	}
 };
 
 class SubprogramCallNode : public StatementNode
@@ -228,6 +270,13 @@ class SubprogramCallNode : public StatementNode
 	ASTNodelList ast_node_list;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
+	NodeKind get_kind() override
+	{
+		return NodeKind::SubprogramCallNode;
+	}
 };
 
 class ArgumentNode : public ASTNode
@@ -255,6 +304,9 @@ class IfNode : public StatementNode
 	StatementList block_false;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class WhileNode : public StatementNode
@@ -268,6 +320,9 @@ class WhileNode : public StatementNode
 	StatementList block;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class RepeatNode : public StatementNode
@@ -281,6 +336,9 @@ class RepeatNode : public StatementNode
 	UP_ASTNode expr;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class ForNode : public StatementNode
@@ -297,6 +355,9 @@ class ForNode : public StatementNode
 	StatementList block;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class BranchingStatementNode : public StatementNode
@@ -308,6 +369,10 @@ class BranchingStatementNode : public StatementNode
 	BranchingStatement branching_statement;
 
 	std::string to_string() override;
+	NodeKind get_kind() override
+	{
+		return NodeKind::BranchingStatementNode;
+	}
 };
 
 class NotExprNode : public ExprNode
@@ -327,6 +392,13 @@ class NotExprNode : public ExprNode
 	}
 
 	std::string to_string() override;
+
+	int eval(std::map<std::string, ReturnType> &variables_type,
+			 std::map<std::string, std::map<int, int>> &variables_value,
+			 std::map<std::string, UP_SubprogramDeclNode> &functions) override
+	{
+		return ~((ExprNode *)expr1.get())->eval(variables_type, variables_value, functions);
+	}
 };
 
 class UnaryExprNode : public ExprNode
@@ -346,6 +418,12 @@ class UnaryExprNode : public ExprNode
 	}
 
 	std::string to_string() override;
+	int eval(std::map<std::string, ReturnType> &variables_type,
+			 std::map<std::string, std::map<int, int>> &variables_value,
+			 std::map<std::string, UP_SubprogramDeclNode> &functions) override
+	{
+		return -1 * ((ExprNode *)expr1.get())->eval(variables_type, variables_value, functions);
+	}
 };
 
 class BinaryExprNode : public ExprNode
@@ -354,8 +432,8 @@ class BinaryExprNode : public ExprNode
 	BinaryExprNode(UP_ASTNode expr1,
 				   UP_ASTNode expr2) : expr1(std::move(expr1)),
 									   expr2(std::move(expr2)) {}
-	UP_ASTNode expr1;
-	UP_ASTNode expr2;
+	UP_ASTNode expr1; // Should have index // in Expr?
+	UP_ASTNode expr2; // Should have index
 
 	std::string to_string() override;
 };
@@ -394,6 +472,13 @@ class NumberNode : public ExprNode
 	}
 
 	std::string to_string() override;
+
+	int eval(std::map<std::string, ReturnType> &variables_type,
+			 std::map<std::string, std::map<int, int>> &variables_value,
+			 std::map<std::string, UP_SubprogramDeclNode> &functions) override
+	{
+		return val;
+	}
 };
 
 class StringNode : public ExprNode
@@ -407,8 +492,18 @@ class StringNode : public ExprNode
 	{
 		return "";
 	}
+	NodeKind get_kind()
+	{
+		return NodeKind::StringNode;
+	}
 
 	std::string to_string() override;
+	int eval(std::map<std::string, ReturnType> &variables_type,
+			 std::map<std::string, std::map<int, int>> &variables_value,
+			 std::map<std::string, UP_SubprogramDeclNode> &functions) override
+	{
+		return 0;
+	}
 };
 
 class BooleanNode : public ExprNode
@@ -424,6 +519,16 @@ class BooleanNode : public ExprNode
 	}
 
 	std::string to_string() override;
+	int eval(std::map<std::string, ReturnType> &variables_type,
+			 std::map<std::string, std::map<int, int>> &variables_value,
+			 std::map<std::string, UP_SubprogramDeclNode> &functions) override
+	{
+		if (val.compare("true") == 0)
+		{
+			return 1;
+		}
+		return 0;
+	}
 };
 
 class IdNode : public StringNode
@@ -435,7 +540,18 @@ class IdNode : public StringNode
 
 	UP_ASTNode index;
 
+	NodeKind get_kind()
+	{
+		return NodeKind::IdNode;
+	}
+
 	std::string to_string() override;
+	int eval(std::map<std::string, ReturnType> &variables_type,
+			 std::map<std::string, std::map<int, int>> &variables_value,
+			 std::map<std::string, UP_SubprogramDeclNode> &functions) override
+	{
+		return variables_value[val][0];
+	}
 };
 
 #endif

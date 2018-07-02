@@ -6,7 +6,11 @@ void NanoPascalParser::parse()
 	this->current_token = this->lexer.get_next_token();
 	UP_ProgramNode o_program_node = program();
 	expected_token(Symbol::Eof, "'EOF'");
-	std::cout << o_program_node->to_string() << "\nParsed" << std::endl;
+	// std::cout << o_program_node->to_string() << "\nParsed" << std::endl;
+	std::map<std::string, ReturnType> variables_type;
+	std::map<std::string, std::map<int, int>> variables_value;
+	std::map<std::string, UP_SubprogramDeclNode> functions;
+	o_program_node->exec(variables_type, variables_value, functions);
 }
 
 void NanoPascalParser::print_error(std::string expected)
