@@ -403,13 +403,401 @@ std::string IdNode::to_string()
 	return val;
 }
 
-void ProgramNode::exec()
+int MulExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
 {
+	int value1 = 0;
+	int value2 = 0;
+	//could be statement
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 * value2;
+}
+
+int DivExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 / value2;
+}
+
+int ModExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 % value2;
+}
+
+int AndExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 & value2;
+}
+
+int ShlExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 << value2;
+}
+
+int ShrExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 >> value2;
+}
+
+int LSExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					 std::map<std::string, std::map<int, int>> &variables_value,
+					 std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 << value2;
+}
+
+int RSExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					 std::map<std::string, std::map<int, int>> &variables_value,
+					 std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 >> value2;
+}
+
+int AddExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 + value2;
+}
+
+int SubExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 - value2;
+}
+
+int OrExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					 std::map<std::string, std::map<int, int>> &variables_value,
+					 std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 | value2;
+}
+
+int XorExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 ^ value2;
+}
+
+int EqExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					 std::map<std::string, std::map<int, int>> &variables_value,
+					 std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 == value2;
+}
+
+int NEqExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 != value2;
+}
+
+int LTExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					 std::map<std::string, std::map<int, int>> &variables_value,
+					 std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 < value2;
+}
+
+int GTExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					 std::map<std::string, std::map<int, int>> &variables_value,
+					 std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 > value2;
+}
+
+int LToEExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					   std::map<std::string, std::map<int, int>> &variables_value,
+					   std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 <= value2;
+}
+
+int GToEExprNode::eval(std::map<std::string, ReturnType> &variables_type,
+					   std::map<std::string, std::map<int, int>> &variables_value,
+					   std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int value1 = 0;
+	int value2 = 0;
+
+	value1 = ((ExprNode *)this->expr1.get())->eval(variables_type, variables_value, functions);
+	value2 = ((ExprNode *)this->expr2.get())->eval(variables_type, variables_value, functions);
+
+	return value1 >= value2;
+}
+
+void ProgramNode::exec(std::map<std::string, ReturnType> &variables_type,
+					   std::map<std::string, std::map<int, int>> &variables_value,
+					   std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	for (auto &variable_decl : this->variable_section)
+	{
+		if (variable_decl != nullptr)
+		{
+			variable_decl->exec(variables_type, variables_value, functions);
+		}
+	}
+
+	for (auto &subprogram : this->subprogram_decl)
+	{
+		if (subprogram != nullptr)
+		{
+			std::string s_id = subprogram->id;
+			functions[s_id] = std::move(subprogram);
+		}
+	}
+
 	for (auto &statement : this->statement_list)
 	{
 		if (statement != nullptr)
 		{
-			statement->exec();
+			statement->exec(variables_type, variables_value, functions);
 		}
+	}
+}
+
+void VariableDeclNode::exec(std::map<std::string, ReturnType> &variables_type,
+							std::map<std::string, std::map<int, int>> &variables_value,
+							std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	for (auto id : this->id_list)
+	{
+		variables_type[id] = this->type;
+		if (this->index1 != -1 && this->index2 != -1)
+		{
+			variables_value[id][-1] = this->index1;
+			variables_value[id][-2] = this->index1;
+		}
+	}
+}
+
+void SubprogramDeclNode::exec(std::map<std::string, ReturnType> &variables_type,
+							  std::map<std::string, std::map<int, int>> &variables_value,
+							  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	std::cout << "TO DO" << std::endl;
+}
+
+void AssignNode::exec(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	int i_index = 0;
+	if (this->index != nullptr && this->index->get_kind() == NodeKind::ExprNode)
+	{
+		i_index = ((ExprNode *)this->index.get())->eval(variables_type, variables_value, functions);
+	}
+
+	int value = 0;
+	if (this->expr->get_kind() == NodeKind::ExprNode)
+	{
+		value = ((ExprNode *)this->expr.get())->eval(variables_type, variables_value, functions);
+	}
+	else if (this->expr->get_kind() == NodeKind::IdNode)
+	{
+		auto id_node = (IdNode *)this->expr.get();
+		int id_node_index = 0;
+
+		if (id_node->index != nullptr && id_node->index->get_kind() == NodeKind::ExprNode)
+		{
+			id_node_index = ((ExprNode *)id_node->index.get())->eval(variables_type, variables_value, functions);
+		}
+
+		value = variables_value[id_node->val][id_node_index];
+	}
+
+	variables_value[this->id][i_index] = value;
+}
+
+void SubprogramCallNode::exec(std::map<std::string, ReturnType> &variables_type,
+							  std::map<std::string, std::map<int, int>> &variables_value,
+							  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	if (this->id.compare("write") == 0)
+	{
+		for (auto &node : this->ast_node_list)
+		{
+			switch (node->get_kind())
+			{
+			case NodeKind::StringNode:
+				std::cout << ((StringNode *)node.get())->val;
+				break;
+			case NodeKind::IdNode:
+			{
+				auto id_node = ((IdNode *)node.get());
+				int index = id_node->index != nullptr ? 0 : 0;
+				std::cout << variables_value[id_node->val][index];
+			}
+			break;
+			case NodeKind::ExprNode:
+				std::cout << ((ExprNode *)node.get())->eval(variables_type, variables_value, functions);
+				break;
+			}
+		}
+	}
+	else if (this->id.compare("writeln") == 0)
+	{
+		for (auto &node : this->ast_node_list)
+		{
+			switch (node->get_kind())
+			{
+			case NodeKind::StringNode:
+				std::cout << ((StringNode *)node.get())->val;
+				break;
+			case NodeKind::IdNode:
+			{
+				auto id_node = ((IdNode *)node.get());
+				int index = id_node->index != nullptr ? 0 : 0;
+				std::cout << variables_value[id_node->val][index];
+			}
+			break;
+			case NodeKind::ExprNode:
+				std::cout << ((ExprNode *)node.get())->eval(variables_type, variables_value, functions);
+				break;
+			case NodeKind::SubprogramCallNode:
+				((SubprogramCallNode *)node.get())->exec(variables_type, variables_value, functions);
+				break;
+			}
+		}
+		std::cout << std::endl;
+	}
+	else if (this->id.compare("read") == 0)
+	{
+		for (auto &node : this->ast_node_list)
+		{
+			auto id_node = ((IdNode *)node.get());
+			std::cin >> variables_value[id_node->val][0];
+		}
+	}
+	else if (this->id.compare("IntToHex") == 0)
+	{
+		// Shouldn't be implemented therefore it does not return a value just prints it out
+		auto front = std::move(this->ast_node_list.front());
+		this->ast_node_list.pop_front();
+
+		int val = ((ExprNode *)this->ast_node_list.front().get())->eval(variables_type, variables_value, functions);
+
+		std::cout << std::uppercase
+				  << std::setfill('0')
+				  << std::setw(val)
+				  << std::hex
+				  << ((ExprNode *)front.get())->eval(variables_type, variables_value, functions);
+
+		this->ast_node_list.push_front(std::move(front));
+	}
+	else if (functions.find(this->id) != functions.end())
+	{
+		functions[this->id]->exec(variables_type, variables_value, functions);
 	}
 }

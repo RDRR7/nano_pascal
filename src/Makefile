@@ -11,7 +11,7 @@ $(TARGET): $(OBJ_FILES)
 	g++ -std=c++14 -g -c -o $@ $<
 
 run: $(TARGET)
-	./$(TARGET) ../examples/HelloWorld.pas
+	./$(TARGET) ../examples/gcd.pas
 
 clean:
 	rm -f *.o
