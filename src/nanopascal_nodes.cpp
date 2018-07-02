@@ -801,3 +801,138 @@ void SubprogramCallNode::exec(std::map<std::string, ReturnType> &variables_type,
 		functions[this->id]->exec(variables_type, variables_value, functions);
 	}
 }
+
+void WhileNode::exec(std::map<std::string, ReturnType> &variables_type,
+					 std::map<std::string, std::map<int, int>> &variables_value,
+					 std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	bool b_continue = false;
+	bool b_break = false;
+	while (((ExprNode *)this->expr.get())->eval(variables_type, variables_value, functions))
+	{
+		if (b_continue)
+		{
+			b_continue = false;
+			continue;
+		}
+		else if (b_break)
+		{
+			break;
+		}
+		for (auto &statement : this->block)
+		{
+			if (statement != nullptr)
+			{
+				if (statement->get_kind() == NodeKind::BranchingStatementNode)
+				{
+					auto branching_statement_node = ((BranchingStatementNode *)statement.get());
+
+					if (branching_statement_node->branching_statement == BranchingStatement::Continue)
+					{
+						b_continue = true;
+						break;
+					}
+					else if (branching_statement_node->branching_statement == BranchingStatement::Break)
+					{
+						b_break = true;
+						break;
+					}
+				}
+				statement->exec(variables_type, variables_value, functions);
+			}
+		}
+	}
+}
+
+void RepeatNode::exec(std::map<std::string, ReturnType> &variables_type,
+					  std::map<std::string, std::map<int, int>> &variables_value,
+					  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	bool b_continue = false;
+	bool b_break = false;
+	do
+	{
+		if (b_continue)
+		{
+			b_continue = false;
+			continue;
+		}
+		else if (b_break)
+		{
+			break;
+		}
+		for (auto &statement : this->block)
+		{
+			if (statement != nullptr)
+			{
+				if (statement->get_kind() == NodeKind::BranchingStatementNode)
+				{
+					auto branching_statement_node = ((BranchingStatementNode *)statement.get());
+
+					if (branching_statement_node->branching_statement == BranchingStatement::Continue)
+					{
+						b_continue = true;
+						break;
+					}
+					else if (branching_statement_node->branching_statement == BranchingStatement::Break)
+					{
+						b_break = true;
+						break;
+					}
+				}
+				statement->exec(variables_type, variables_value, functions);
+			}
+		}
+	} while (!((ExprNode *)this->expr.get())->eval(variables_type, variables_value, functions));
+}
+
+void ForNode::exec(std::map<std::string, ReturnType> &variables_type,
+				   std::map<std::string, std::map<int, int>> &variables_value,
+				   std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	this->assign->exec(variables_type, variables_value, functions);
+
+	auto assign_node = ((AssignNode *)this->assign.get());
+	std::string id = assign_node->id;
+
+	auto final_value = ((ExprNode *)this->expr.get())->eval(variables_type, variables_value, functions);
+
+	bool b_continue = false;
+	bool b_break = false;
+	while (variables_value[id][0] <= final_value)
+	{
+		if (b_continue)
+		{
+			b_continue = false;
+			continue;
+		}
+		else if (b_break)
+		{
+			break;
+		}
+
+		for (auto &statement : this->block)
+		{
+			if (statement != nullptr)
+			{
+				if (statement->get_kind() == NodeKind::BranchingStatementNode)
+				{
+					auto branching_statement_node = ((BranchingStatementNode *)statement.get());
+
+					if (branching_statement_node->branching_statement == BranchingStatement::Continue)
+					{
+						b_continue = true;
+						break;
+					}
+					else if (branching_statement_node->branching_statement == BranchingStatement::Break)
+					{
+						b_break = true;
+						break;
+					}
+				}
+				statement->exec(variables_type, variables_value, functions);
+			}
+		}
+		variables_value[id][0]++;
+	}
+}

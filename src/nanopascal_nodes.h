@@ -102,6 +102,7 @@ enum class NodeKind : unsigned int
 	IdNode = 2,
 	ExprNode = 3,
 	SubprogramCallNode = 4,
+	BranchingStatementNode = 5,
 };
 
 class ASTNode
@@ -316,6 +317,9 @@ class WhileNode : public StatementNode
 	StatementList block;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class RepeatNode : public StatementNode
@@ -329,6 +333,9 @@ class RepeatNode : public StatementNode
 	UP_ASTNode expr;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class ForNode : public StatementNode
@@ -345,6 +352,9 @@ class ForNode : public StatementNode
 	StatementList block;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class BranchingStatementNode : public StatementNode
@@ -356,6 +366,10 @@ class BranchingStatementNode : public StatementNode
 	BranchingStatement branching_statement;
 
 	std::string to_string() override;
+	NodeKind get_kind() override
+	{
+		return NodeKind::BranchingStatementNode;
+	}
 };
 
 class NotExprNode : public ExprNode
@@ -415,7 +429,7 @@ class BinaryExprNode : public ExprNode
 	BinaryExprNode(UP_ASTNode expr1,
 				   UP_ASTNode expr2) : expr1(std::move(expr1)),
 									   expr2(std::move(expr2)) {}
-	UP_ASTNode expr1; // Should have index
+	UP_ASTNode expr1; // Should have index // in Expr?
 	UP_ASTNode expr2; // Should have index
 
 	std::string to_string() override;
