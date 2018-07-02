@@ -304,6 +304,9 @@ class IfNode : public StatementNode
 	StatementList block_false;
 
 	std::string to_string() override;
+	void exec(std::map<std::string, ReturnType> &variables_type,
+			  std::map<std::string, std::map<int, int>> &variables_value,
+			  std::map<std::string, UP_SubprogramDeclNode> &functions) override;
 };
 
 class WhileNode : public StatementNode

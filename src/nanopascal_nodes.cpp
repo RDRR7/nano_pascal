@@ -686,7 +686,36 @@ void SubprogramDeclNode::exec(std::map<std::string, ReturnType> &variables_type,
 							  std::map<std::string, std::map<int, int>> &variables_value,
 							  std::map<std::string, UP_SubprogramDeclNode> &functions)
 {
-	std::cout << "TO DO" << std::endl;
+	std::map<std::string, ReturnType> local_variables_type;
+	std::map<std::string, std::map<int, int>> local_variables_value;
+
+	for (auto &variable_decl : this->variable_section)
+	{
+		if (variable_decl != nullptr)
+		{
+			variable_decl->exec(local_variables_type, local_variables_value, functions);
+		}
+	}
+
+	local_variables_type.insert(variables_type.begin(), variables_type.end());
+	local_variables_value.insert(variables_value.begin(), variables_value.end());
+
+	for (auto &statement : this->statement_list)
+	{
+		if (statement != nullptr)
+		{
+			statement->exec(local_variables_type, local_variables_value, functions);
+		}
+	}
+
+	variables_type[this->id] = this->return_type;
+	if (this->index1 != -1 && this->index2 != -1)
+	{
+		variables_value[id][-1] = this->index1;
+		variables_value[id][-2] = this->index1;
+	}
+
+	variables_value[this->id][0] = local_variables_value[this->id][0];
 }
 
 void AssignNode::exec(std::map<std::string, ReturnType> &variables_type,
@@ -715,6 +744,13 @@ void AssignNode::exec(std::map<std::string, ReturnType> &variables_type,
 		}
 
 		value = variables_value[id_node->val][id_node_index];
+	}
+	else if (this->expr->get_kind() == NodeKind::SubprogramCallNode)
+	{
+		this->expr->exec(variables_type, variables_value, functions);
+		auto subprogram_call_node = (SubprogramCallNode *)this->expr.get();
+
+		value = variables_value[subprogram_call_node->id][0];
 	}
 
 	variables_value[this->id][i_index] = value;
@@ -798,7 +834,29 @@ void SubprogramCallNode::exec(std::map<std::string, ReturnType> &variables_type,
 	}
 	else if (functions.find(this->id) != functions.end())
 	{
-		functions[this->id]->exec(variables_type, variables_value, functions);
+		std::map<std::string, ReturnType> local_variables_type;
+		std::map<std::string, std::map<int, int>> local_variables_value;
+
+		auto i = functions[this->id]->argument_decl_list.begin();
+		for (auto &ast_node : this->ast_node_list)
+		{
+			if (ast_node != nullptr)
+			{
+				int val = ((ExprNode *)ast_node.get())->eval(variables_type, variables_value, functions);
+				local_variables_type[(*i)->id] = (*i)->type;
+				if ((*i)->index1 != -1 && (*i)->index2 != -1)
+				{
+					local_variables_value[id][-1] = (*i)->index1;
+					local_variables_value[id][-2] = (*i)->index1;
+				}
+				local_variables_value[(*i)->id][0] = val;
+			}
+			i++;
+		}
+		functions[this->id]->exec(local_variables_type, local_variables_value, functions);
+
+		variables_type[this->id] = local_variables_type[this->id];
+		variables_value[this->id] = local_variables_value[this->id];
 	}
 }
 
@@ -934,5 +992,34 @@ void ForNode::exec(std::map<std::string, ReturnType> &variables_type,
 			}
 		}
 		variables_value[id][0]++;
+	}
+}
+
+void IfNode::exec(std::map<std::string, ReturnType> &variables_type,
+				  std::map<std::string, std::map<int, int>> &variables_value,
+				  std::map<std::string, UP_SubprogramDeclNode> &functions)
+{
+	if (this->expr->get_kind() == NodeKind::ExprNode)
+	{
+		if (((ExprNode *)this->expr.get())->eval(variables_type, variables_value, functions))
+		{
+			for (auto &statement : this->block_true)
+			{
+				if (statement != nullptr)
+				{
+					statement->exec(variables_type, variables_value, functions);
+				}
+			}
+		}
+		else if (!this->block_false.empty())
+		{
+			for (auto &statement : this->block_false)
+			{
+				if (statement != nullptr)
+				{
+					statement->exec(variables_type, variables_value, functions);
+				}
+			}
+		}
 	}
 }
