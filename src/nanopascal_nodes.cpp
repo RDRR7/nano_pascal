@@ -97,12 +97,16 @@ std::string SubprogramDeclNode::to_string()
 	if (!this->argument_decl_list.empty() &&
 		this->argument_decl_list.front() != nullptr)
 	{
-		s_argument_decl_list = this->argument_decl_list.front()->to_string();
+		auto front = std::move(this->argument_decl_list.front());
 		this->argument_decl_list.pop_front();
+
+		s_argument_decl_list = front->to_string();
 		for (auto &argument_decl : this->argument_decl_list)
 		{
 			s_argument_decl_list += "; " + argument_decl->to_string();
 		}
+
+		this->argument_decl_list.push_front(std::move(front));
 	}
 
 	std::string s_statement_list = "";
@@ -123,12 +127,16 @@ std::string VariableDeclNode::to_string()
 	std::string s_id_list = "";
 	if (!this->id_list.empty())
 	{
-		s_id_list = this->id_list.front();
+		auto front = this->id_list.front();
 		this->id_list.pop_front();
+
+		s_id_list = front;
 		for (auto id : this->id_list)
 		{
 			s_id_list += ", " + id;
 		}
+
+		this->id_list.push_front(front);
 	}
 
 	std::string s_type = "";
@@ -244,12 +252,16 @@ std::string SubprogramCallNode::to_string()
 	if (!this->ast_node_list.empty() &&
 		this->ast_node_list.front() != nullptr)
 	{
-		s_ast_node_list = this->ast_node_list.front()->to_string();
+		auto front = std::move(this->ast_node_list.front());
 		this->ast_node_list.pop_front();
+
+		s_ast_node_list = front->to_string();
 		for (auto &ast_node : this->ast_node_list)
 		{
 			s_ast_node_list += ", " + ast_node->to_string();
 		}
+
+		this->ast_node_list.push_front(std::move(front));
 	}
 
 	return this->id + "(" + s_ast_node_list + ")";
@@ -389,4 +401,15 @@ std::string BooleanNode::to_string()
 std::string IdNode::to_string()
 {
 	return val;
+}
+
+void ProgramNode::exec()
+{
+	for (auto &statement : this->statement_list)
+	{
+		if (statement != nullptr)
+		{
+			statement->exec();
+		}
+	}
 }

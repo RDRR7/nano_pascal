@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <list>
+#include <iostream>
 
 #define DEFINE_BINARY_EXPR(name, prec, oper)                        \
 	class name##ExprNode : public BinaryExprNode                    \
@@ -97,6 +98,10 @@ class ASTNode
 
 	int get_precedence() { return 10; };
 	virtual std::string to_string() = 0;
+	virtual void exec()
+	{
+		std::cout << "Not implemented" << std::endl;
+	}
 };
 
 class ProgramNode : public ASTNode
@@ -116,6 +121,7 @@ class ProgramNode : public ASTNode
 	StatementList statement_list;
 
 	std::string to_string() override;
+	void exec() override;
 };
 
 class SubprogramDeclNode : public ASTNode
